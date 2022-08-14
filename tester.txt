@@ -1,0 +1,58 @@
+tester.txt
+
+<STRINGHOLDER>
+String1
+It hides the detailed implementtion of the program inside a specific module so that it is not exposed to the outside. The concept of increasing flexibiity and maintenance by hiding the internal implementation, increasing cohesion within the module, and minimizing exposure to the outside by reducng coupling between modules. Based on classes used in many object-oriented languages, outside the class, only certain externlly exposed methods are accessible and are designed not to know how processing is done inside the class.
+</STRINGHOLDER>
+<TABLE>
+NewTable
+3
+5
+NAME
+Hyegeun
+Serim
+Hyun
+Suyeon
+C++
+I REALLY LOVE IT
+I love it
+I love it
+I love it
+JAVA
+Too slow
+Too slow
+Too slow
+Too slwo
+</TABLE>
+<LINE>
+Satisfaction on C++
+6
+12
+Hyegeun
+5.000000
+Serim
+4.000000
+Hyun
+2.000000
+Suyeon
+4.000000
+Hyunah
+4.000000
+SSSSSS
+5.000000
+</LINE>
+<HISTOGRAM>
+Satisfaction on JAVA
+5
+7
+Hyegeun
+1.000000
+Serim
+2.000000
+Hyun
+1.000000
+Suyeon
+2.000000
+MAX
+5.000000
+</HISTOGRAM>
