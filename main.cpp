@@ -1,121 +1,9 @@
-#include<functional>
-#include<algorithm>
-#include<iostream>
-#include<fstream>
-#include<memory>
-#include<string>
-#include<vector>
-#include<cmath>
+#include "mint.h"
 
 using namespace std;
 
-class Node;
-class Trie;
-class Clipboard;
-class Document;
-class Holder;
-class TestHolder;
-class StringHolder;
-class Grimpan;
-class TableHolder;
-class LineHolder;
-class Document;
-class Listener;
-
 enum Type {HOLDER, TEST_HOLDER, GRIMPAN, STRING_HOLDER, TABLE_HOLDER, LINE_HOLDER, HISTOGRAM_HOLDER};
 enum ERROR_INFO {OUT_OF_RANGE_ERROR, UNPOPPABLE_CONTAINER_ERROR, TOO_LARGE_ARGUMENT_ERROR, NIL};
-
-constexpr bool track_objs = false;
-
-namespace Utils {
-
-    string itos(int n) {
-        char chars[10] = {48, 49, 50, 51, 52, 53, 54, 55, 56, 57};
-        string str;
-        int DIV = 1;
-        while (n >= DIV) {
-            DIV *= 10;
-        } DIV /= 10;
-        while (DIV > 0) {
-            str += chars[n / DIV];
-            n %= DIV;
-            DIV /= 10;
-        }
-
-        return str;
-    }
-
-// lowercase: Gets an uppercase letter(65~90) c and modify it into a lowercase letter.
-    char lowercase(char c) {
-        if (65 <= c && c <= 90) {
-            return c + 32;
-        } return c;
-    }
-
-// lowercase: Gets a reference to a string and modify the all uppercases into lowercases.
-    string lowercase(const string& str) {
-        string hold = str;
-        for (int i = 0; i < str.size(); ++i) {
-            if (65 <= hold[i] && hold[i] <= 90) {
-                hold[i] += 32;
-            }
-        }
-        return hold;
-    }
-
-// lowercase : Gets a reference to a vector<string> and modify the all uppercases into lowercases.
-    void lowercase(vector<string>& vecstr) {
-        for (string str : vecstr) {
-            lowercase(str);
-        }
-    }
-
-    vector<string> split(const string& str) {
-        vector<string> vecstr(1);
-        for (char c : str) {
-            if (65 <= c && c <= 90) {
-                vecstr.back() += c + 32;
-            } else if (97 <= c && c <= 122) {
-                vecstr.back() += c;
-            } else if (!vecstr.back().empty()) {
-                vecstr.push_back("");
-            }
-        }
-        return vecstr;
-    }
-
-    string reversed(const string& str) {
-        string ret;
-        ret.reserve(str.size());
-
-        for (int i = 0; i < str.size(); ++i) {
-            ret.push_back(str[str.size() - i - 1]);
-        }
-
-        return ret;
-    }
-
-// The function checking closeness of two strings; Here, the definition of 'closeness' at the description of Trie::deepest_node_so_far() function.
-    unsigned int closeness(const string& s1, const string& s2,
-                           function<string(const string&)> init = [](const string& s) -> string {return s;}) {
-        string str1 = init(s1);
-        string str2 = init(s2);
-
-        unsigned int ret = 0;
-        unsigned int size = (unsigned int) (s1.size() < s2.size() ? s1.size() : s2.size());
-
-        for (int i = 0; i < size; ++i) {
-            if (str1[i] == str2[i]) {
-                ++ret;
-            } else {
-                break;
-            }
-        }
-
-        return ret;
-    }
-
-};
 
 struct ERRORS {
     ERROR_INFO error_info;
@@ -160,7 +48,7 @@ public:
 
     // Add some nodes
     void put(char c) {
-        if (next[c - 97] == NULL) { // For some lowercase char c, (c - 97) converts a to 0, b to 1, ... z to 25
+        if (next[c - 97] == NULL) { // For some make_lowercase char c, (c - 97) converts a to 0, b to 1, ... z to 25
             next[c - 97] = new Node(c, level + 1);
             ++offspring_num;
         } else {
@@ -363,10 +251,10 @@ public:
     // __contains__ : Return true if str is in Trie, else return false
     bool __contains__(const string& input) const {
         string str = preprocess(input);
-        // Check whether the pushed string does not contain non-lowercase-alphabet characters
+        // Check whether the pushed string does not contain non-make_lowercase-alphabet characters
         for (char c : str) {
             if (c < 97 || c > 122) { // 97 == 'a', 122 == 'z'
-                // if a non-lowercase-alphabet character is found, then it is not contained in our Trie.
+                // if a non-make_lowercase-alphabet character is found, then it is not contained in our Trie.
                 return false;
             }
         }
@@ -389,10 +277,10 @@ public:
     // push : Push str into our Trie
     void push(const string& input) {
         const string str = preprocess(input);
-        // Check whether the pushed string does not contain non-lowercase-alphabet characters
+        // Check whether the pushed string does not contain non-make_lowercase-alphabet characters
         for (char c : str) {
             if (c < 97 || c > 122) { // 97 == 'a', 122 == 'z'
-                // if a non-lowercase-alphabet character is found, then do nothing
+                // if a non-make_lowercase-alphabet character is found, then do nothing
                 return;
             }
         }
@@ -420,10 +308,10 @@ public:
 
     // remove
     void remove(const string& str) {
-        // Check whether the pushed string does not contain non-lowercase-alphabet characters
+        // Check whether the pushed string does not contain non-make_lowercase-alphabet characters
         for (char c : str) {
             if (c < 97 || c > 122) { // 97 == 'a', 122 == 'z'
-                // if a non-lowercase-alphabet character is found, then our Trie may do not contain it: Do nothing.
+                // if a non-make_lowercase-alphabet character is found, then our Trie may do not contain it: Do nothing.
                 return;
             }
         }
@@ -736,7 +624,7 @@ public:
         unsigned int idx = -1;
 
         for (pair<string, int> pairpair : vecpair) {
-            string str = Utils::lowercase(pairpair.first);
+            string str = mint_utils::make_lowercase(pairpair.first);
             if (!trie.__contains__(str)) {
                 // Get our suggests list in our Trie
                 vector<string> suggests = trie.get_suggestions(str, MAX_SUGGESTIONS);
@@ -784,7 +672,7 @@ public:
         unsigned int idx = -1;
 
         for (pair<string, int> pairpair : vecpair) {
-            string str = Utils::lowercase(pairpair.first);
+            string str = mint_utils::make_lowercase(pairpair.first);
             if (trie1.__contains__(str)) {
                 // If our letter is in out trie, i.e. right spell, then just pass
                 continue;
@@ -806,7 +694,7 @@ public:
 
             // The lambda function in the 3rd component of 'sort' is a function that reads two string pointers (lhs, rhs) and return whether *lhs is closer to 'str' than *rhs.
             sort(ptrs, ptrs + suggests.size(), [str, &read_dir_1, &read_dir_2](string* lhs, string* rhs) -> bool {
-                return Utils::closeness(*lhs, str, read_dir_1) + Utils::closeness(*lhs, str, read_dir_2) > Utils::closeness(*rhs, str, read_dir_1) + Utils::closeness(*rhs, str, read_dir_2);
+                return mint_utils::closeness(*lhs, str, read_dir_1) + mint_utils::closeness(*lhs, str, read_dir_2) > mint_utils::closeness(*rhs, str, read_dir_1) + mint_utils::closeness(*rhs, str, read_dir_2);
             });
 
             // If MAX_SUGGESTIONS = 20 and suggests.size() = 15, then we suggest 15 words
@@ -865,9 +753,9 @@ public:
         // Type "Grimpan" only stores 2 data : x_pxl, y_pxl
         unique_ptr<string> ptr(new string);
         *ptr = "<GRIMPAN>\n";
-        *ptr += Utils::itos(x_pxl);
+        *ptr += std::to_string(x_pxl);
         *ptr += "\n";
-        *ptr += Utils::itos(y_pxl);
+        *ptr += std::to_string(y_pxl);
         *ptr += "\n";
         *ptr += "</GRIMPAN>\n";
 
@@ -955,9 +843,9 @@ public:
 
         *ptr += title;
         *ptr += '\n';
-        *ptr += Utils::itos(i_num);
+        *ptr += std::to_string(i_num);
         *ptr += '\n';
-        *ptr += Utils::itos(j_num);
+        *ptr += std::to_string(j_num);
         *ptr += '\n';
 
         for (vector<string> vs : content) {
@@ -1314,9 +1202,9 @@ public:
 
         *ptr += title;
         *ptr += '\n';
-        *ptr += Utils::itos(x_label_number);
+        *ptr += std::to_string(x_label_number);
         *ptr += '\n';
-        *ptr += Utils::itos(i_pxl);
+        *ptr += std::to_string(i_pxl);
         *ptr += '\n';
 
         for (Label l : label) {
@@ -1382,9 +1270,9 @@ public:
 
         *ptr += title;
         *ptr += '\n';
-        *ptr += Utils::itos(x_label_number);
+        *ptr += std::to_string(x_label_number);
         *ptr += '\n';
-        *ptr += Utils::itos(i_pxl);
+        *ptr += std::to_string(i_pxl);
         *ptr += '\n';
 
         for (Label l : label) {
@@ -1735,7 +1623,7 @@ class Listener {
 
 public:
 
-    Listener(const vector<string>& sd, const vector<string>& strd) : how_many_words_do_you_want(10), doc_ptr(new Document(sd)), trie_ptr1(new Trie(strd)), trie_ptr2(new Trie(strd, [](const string& str) -> string {return Utils::reversed(str);}, [](const string& str) -> string {return Utils::reversed(str);})) {}
+    Listener(const vector<string>& sd, const vector<string>& strd) : how_many_words_do_you_want(10), doc_ptr(new Document(sd)), trie_ptr1(new Trie(strd)), trie_ptr2(new Trie(strd, [](const string& str) -> string {return mint_utils::reversed(str);}, [](const string& str) -> string {return mint_utils::reversed(str);})) {}
 
     ~Listener() {
         if (doc_ptr != NULL) {
@@ -2272,7 +2160,7 @@ int main() {
     }
 
     while (getline(triefile, str)) {
-        string lower_str = Utils::lowercase(str);
+        string lower_str = mint_utils::make_lowercase(str);
         scanned_trie_data.push_back(lower_str);
     }
 

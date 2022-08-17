@@ -24,8 +24,8 @@ CMAKE_AR:FILEPATH=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDef
 // MinSizeRel ...
 CMAKE_BUILD_TYPE:STRING=Debug
 
-//CXX compiler
-CMAKE_CXX_COMPILER:STRING=/opt/homebrew/bin/g++-12
+//No help, variable specified on the command line.
+CMAKE_CXX_COMPILER:UNINITIALIZED=/opt/homebrew/bin/g++-12
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
