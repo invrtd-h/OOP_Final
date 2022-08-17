@@ -1,4 +1,26 @@
-#include "mint.h"
+#include <functional>
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <utility>
+#include <memory>
+#include <string>
+#include <vector>
+#include <cmath>
+
+class Node;
+class Trie;
+class Clipboard;
+class Document;
+class Holder;
+class TestHolder;
+class StringHolder;
+class Grimpan;
+class TableHolder;
+class LineHolder;
+class Listener;
+
+#include "mint_utils.h"
 
 using namespace std;
 
@@ -12,12 +34,6 @@ struct ERRORS {
 };
 
 class Node {
-    /*
-     "Node" class is used to implement a powerful data structure called "Trie", or "Retrieval-tree" which can find or add some strings within the time complexity O(s), where s denotes the length of string.
-     Especially, we implemented Trie to make our spell-check system faster.
-
-     Note : If we implement this functions using Red-Black Tree rather than "Trie", we get the time complexity O(slogn), which is slower than that of "Trie". Furthermore, Using "Trie", we can implement a 'search(str)' function, which returns all words which have str as a prefix: It is hard to implement if we use Red-Black Tree.
-     */
 protected:
     char ch;
     int level, offspring_num;
@@ -25,19 +41,19 @@ protected:
     string* to_data;
 
 public:
-    Node(char _c, int _level) : ch(_c), level(_level), to_data(NULL), offspring_num(0) {
-        for (int i = 0; i < 26; ++i) {
-            next[i] = NULL;
+    Node(char _c, int _level) : ch(_c), level(_level), to_data(nullptr), offspring_num(0) {
+        for (auto& i : next) {
+            i = nullptr;
         }
     }
     virtual ~Node() {
         // cout << ch << " Node with offspring " << offspring_num << " deleted" << endl;
-        for (int i = 0; i < 26; ++i) {
-            if (next[i] != NULL) {
-                delete next[i];
+        for (auto& i : next) {
+            if (i != nullptr) {
+                delete i;
             }
         }
-        if (to_data != NULL) {
+        if (to_data != nullptr) {
             delete to_data;
         }
     }
@@ -48,7 +64,7 @@ public:
 
     // Add some nodes
     void put(char c) {
-        if (next[c - 97] == NULL) { // For some make_lowercase char c, (c - 97) converts a to 0, b to 1, ... z to 25
+        if (next[c - 97] == nullptr) { // For some make_lowercase char c, (c - 97) converts a to 0, b to 1, ... z to 25
             next[c - 97] = new Node(c, level + 1);
             ++offspring_num;
         } else {
@@ -64,9 +80,9 @@ public:
     }
     // Delete an offspring node
     void remove(char c) {
-        if (next[c - 97] != NULL) {
+        if (next[c - 97] != nullptr) {
             delete next[c - 97];
-            next[c - 97] = NULL;
+            next[c - 97] = nullptr;
             --offspring_num;
         } else {
             // This is a debug message : If you saw this message, then even if there is no compile error, it may cause a logical error.
@@ -75,9 +91,9 @@ public:
     }
     // Delete string*
     void remove() {
-        if (to_data != NULL) {
+        if (to_data != nullptr) {
             delete to_data;
-            to_data = NULL;
+            to_data = nullptr;
             --offspring_num;
         } else {
             // This is a debug message : If you saw this message, then even if there is no compile error, it may cause a logical error.
@@ -93,7 +109,7 @@ public:
         if (0 <= idx && idx < 26) {
             return next[idx];
         }
-        return NULL;
+        return nullptr;
     }
     int get_level() const {
         return level;
@@ -119,7 +135,7 @@ public:
             const Node* popped = stack.back();
             stack.pop_back();
 
-            if (popped->to_data != NULL) {
+            if (popped->to_data != nullptr) {
                 vecstr.push_back(*popped->to_data);
                 if (vecstr.size() >= MAX_VEC_SIZE) {
                     break;
@@ -127,7 +143,7 @@ public:
             }
 
             for (int i = 25; i >= 0; --i) {
-                if (popped->next[i] != NULL) {
+                if (popped->next[i] != nullptr) {
                     stack.push_back(popped->next[i]);
                 }
             }
@@ -140,9 +156,9 @@ public:
 protected:
     void depth_first_search(string& str) const {
         str += ch;
-        for (int i = 0; i < 26; ++i) {
-            if (next[i] != NULL) {
-                next[i]->depth_first_search(str);
+        for (auto i : next) {
+            if (i != nullptr) {
+                i->depth_first_search(str);
             }
         }
         if (97 <= str.back() && str.back() <= 122) {
@@ -225,9 +241,9 @@ private:
         const Node* travel = this;
         nodes_so_far.push_back(travel);
         for (char c : str) {
-            if (travel->get_next(c) == NULL) {
+            if (travel->get_next(c) == nullptr) {
                 // If str is not contained in our Trie, then return NULL
-                return NULL;
+                return nullptr;
             }
             travel = travel->get_next(c);
             nodes_so_far.push_back(travel);
@@ -244,7 +260,7 @@ private:
             }
         }
 
-        return NULL;
+        return nullptr;
     }
 
 public:
@@ -264,7 +280,7 @@ public:
 
         if (ptr->get_level() == str.size()) {
             string* temp = ptr->get_strptr();
-            if (temp != NULL && *temp == str) {
+            if (temp != nullptr && *temp == str) {
                 // If we found the str in our Trie, then return true.
                 return true;
             }
@@ -290,7 +306,7 @@ public:
 
         if (ptr->get_level() == str.size()) {
             string* temp = ptr->get_strptr();
-            if (temp != NULL && *temp == str) {
+            if (temp != nullptr && *temp == str) {
                 // If str already exists in our Trie, then do nothing.
                 return;
             }
@@ -319,7 +335,7 @@ public:
         // Delete the const feature; now ptr is no more const Node* pointer.
         Node* ptr = const_cast<Node*>(if_contained_get_lowest_nonbranch(str));
 
-        if (ptr == NULL) {
+        if (ptr == nullptr) {
             // If str is not contained in our Trie, then do nothing.
             return;
         }
@@ -347,8 +363,8 @@ public:
         // Load all strings with same prefixes in our dictionary
         vector<string> ret = search_start_node->traverse(MAX_SUGGESTIONS);
 
-        for (int i = 0; i < ret.size(); ++i) {
-            ret[i] = backprocess(ret[i]);
+        for (auto& i : ret) {
+            i = backprocess(i);
         }
 
         return ret;
@@ -358,7 +374,7 @@ public:
         vector<string> suggests = get_suggestions(input, MAX_SUGGESTIONS);
 
         cout << "The alternative words for word '" << input << "' are: " << endl;
-        for (string str : suggests) {
+        for (const string& str : suggests) {
             cout << str << " | ";
         } cout << endl;
     }
@@ -420,7 +436,7 @@ protected:
 
 public:
     Holder(const string& t = "null_title") : title(t) {}
-    virtual ~Holder() {}
+    virtual ~Holder() = default;
     virtual void show() const = 0;
     virtual Type get_type() const = 0;
     virtual unique_ptr<string> to_txt_data() const = 0;

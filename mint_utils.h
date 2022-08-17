@@ -1,31 +1,9 @@
-//
-// Created by 송혜근 on 2022/08/18.
-//
+#ifndef OOPFINAL_MINT_UTILS_H
+#define OOPFINAL_MINT_UTILS_H
 
-#ifndef OOPFINAL_MINT_H
-#define OOPFINAL_MINT_H
-
-#include <functional>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <utility>
-#include <memory>
 #include <string>
 #include <vector>
-#include <cmath>
-
-class Node;
-class Trie;
-class Clipboard;
-class Document;
-class Holder;
-class TestHolder;
-class StringHolder;
-class Grimpan;
-class TableHolder;
-class LineHolder;
-class Listener;
+#include <algorithm>
 
 namespace mint_utils {
 
@@ -36,7 +14,7 @@ namespace mint_utils {
 
     std::string                 make_lowercase(std::string str);
     std::vector<std::string>    split(const std::string& str);
-    inline std::string          reversed(std::string str);
+    std::string                 reversed(std::string str);
 
     // TODO : move this function to Trie class
     unsigned int closeness(const std::string& s1, const std::string& s2,
@@ -54,7 +32,6 @@ namespace mint_utils {
             }
         }
     }
+}
 
-};
-
-#endif //OOPFINAL_MINT_H
+#endif //OOPFINAL_MINT_UTILS_H
