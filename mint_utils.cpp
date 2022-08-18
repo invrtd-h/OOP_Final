@@ -27,3 +27,7 @@ std::string mint_utils::reversed(std::string str) {
     std::reverse(str.begin(), str.end());
     return str;
 }
+
+std::string mint_utils::identity(std::string str) {
+    return str;
+}

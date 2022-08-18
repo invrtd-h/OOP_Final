@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <utility>
 #include <memory>
 #include <string>
@@ -15,16 +16,16 @@ class Document;
 class Holder;
 class TestHolder;
 class StringHolder;
-class Grimpan;
+class ShapeHolder;
 class TableHolder;
 class LineHolder;
 class Listener;
 
 #include "mint_utils.h"
+#include "holders.h"
 
 using namespace std;
 
-enum Type {HOLDER, TEST_HOLDER, GRIMPAN, STRING_HOLDER, TABLE_HOLDER, LINE_HOLDER, HISTOGRAM_HOLDER};
 enum ERROR_INFO {OUT_OF_RANGE_ERROR, UNPOPPABLE_CONTAINER_ERROR, TOO_LARGE_ARGUMENT_ERROR, NIL};
 
 struct ERRORS {
@@ -398,9 +399,6 @@ public:
 };
 
 class Clipboard {
-    /*
-     "Clipboard" class is used to implement copy-paste functions at StringHolder.
-     */
 private:
     string arr[100];
     string error_message;
@@ -425,80 +423,13 @@ public:
     }
 };
 
-class Holder {
-    /*
-     A base class for every Holder-type class, like StringHolder or TableHolder.
-     We use inheritance to structure Polymorphism, i.e. to use dynamic-binded functions like show(), to_txt_data(), and who_am_i()
-     */
-protected:
-    string title;
-    bool show_title;
-
-public:
-    Holder(const string& t = "null_title") : title(t) {}
-    virtual ~Holder() = default;
-    virtual void show() const = 0;
-    virtual Type get_type() const = 0;
-    virtual unique_ptr<string> to_txt_data() const = 0;
-
-    string get_title() const {
-        return title;
-    }
-    void set_title(const string& str) {
-        title = str;
-    }
-
-    // Show or hide title
-    void title_on() {
-        show_title = true;
-    }
-    void title_off() {
-        show_title = false;
-    }
-
-};
-
-class TestHolder : public Holder {
-private:
-    string data;
-public:
-    TestHolder() : Holder(), data("MY TEST DATA!!!\n") {}
-    TestHolder(const vector<string>& _data) : Holder() {
-        string hold;
-        for (string i : _data) {
-            hold += i;
-            hold += '\n';
-        }
-        data = hold;
-    }
-
-    // Print method
-    void show() const override {
-        cout << data << endl;
-    }
-
-    // Get methods which must be implemented
-    Type get_type() const override {
-        return TEST_HOLDER;
-    }
-
-    // Save method
-    unique_ptr<string> to_txt_data() const override {
-        unique_ptr<string> ptr(new string);
-        *ptr = "<TESTHOLDER>\n";
-        *ptr += data;
-        *ptr += "</TESTHOLDER>\n";
-        return ptr;
-    }
-};
-
 class StringHolder : public Holder {
 
 private:
     string data;
 
 public:
-    StringHolder(const vector<string>& _data) : Holder(_data[0]) {
+    explicit StringHolder(const vector<string>& _data) : Holder(_data[0]) {
         show_title = false;
 
         string hold;
@@ -514,7 +445,7 @@ public:
     }
 
     // Print method
-    void show() const override {
+    void print() const override {
         if (show_title) {
             cout << title << endl;
         }
@@ -526,28 +457,26 @@ public:
     }
 
     // Get methods
-    Type get_type() const override {
+    [[nodiscard]] TYPE get_type() const override {
         return STRING_HOLDER;
     }
-    int get_size() const {
+    [[nodiscard]] int get_size() const {
         return (int) data.size();
     }
 
     // Save method
-    unique_ptr<string> to_txt_data() const override {
-        unique_ptr<string> ptr(new string);
-        *ptr = "<STRINGHOLDER>\n";
-        *ptr += title;
-        *ptr += '\n';
-        *ptr += data;
-        *ptr += "</STRINGHOLDER>\n";
-        return ptr;
+    [[nodiscard]] std::string to_txt_data() const override {
+        std::stringstream ss;
+        ss << "<STRINGHOLDER>\n" << title << '\n' << data << '\n' << "</STRINGHOLDER>\n";
+
+        std::string ret; ss >> ret;
+        return ret;
     }
 
 private:
-    vector<pair<string, int>> data_split() const {
+    [[nodiscard]] vector<pair<string, int>> data_split() const {
         vector<pair<string, int>> vecpair;
-        vecpair.push_back(pair<string, int>("", 0));
+        vecpair.emplace_back("", 0);
 
         for (int i = 0; i < data.size(); ++i) {
             if (65 <= data[i] && data[i] <= 90) {
@@ -740,7 +669,7 @@ public:
                 // mlsf -= size to delete; mlsf += size to put;
                 mlsf -= (unsigned int) pairpair.first.size() - ptrs[idx]->size();
 
-                show();
+                print();
             }
 
             cout << endl;
@@ -753,95 +682,27 @@ public:
 
 };
 
-class Grimpan : public Holder {
-private:
-    int x_pxl, y_pxl;
-public:
-    Grimpan(const vector<string>& data) : Holder(), x_pxl(stoi(data[0])), y_pxl(stoi(data[1])) {}
-
-    // Get methods which must be implemented
-    Type get_type() const override {
-        return GRIMPAN;
-    }
-
-    // Save method
-    unique_ptr<string> to_txt_data() const override {
-        // Type "Grimpan" only stores 2 data : x_pxl, y_pxl
-        unique_ptr<string> ptr(new string);
-        *ptr = "<GRIMPAN>\n";
-        *ptr += std::to_string(x_pxl);
-        *ptr += "\n";
-        *ptr += std::to_string(y_pxl);
-        *ptr += "\n";
-        *ptr += "</GRIMPAN>\n";
-
-        return ptr;
-    }
-
-    // Print method
-    void show() const override {
-        // Dynamic Memory Allocation
-        char** frame = new char*[y_pxl];
-        for (int i = 0; i < y_pxl; ++i) {
-            frame[i] = new char[x_pxl];
-        }
-        // Dynamic Memory Allocation End
-
-        init_frame(frame);
-        draw_something(frame);
-
-        for (int i = 0; i < y_pxl; ++i) {
-            for (int j = 0; j < x_pxl; ++j) {
-                cout << frame[i][j];
-            } cout << endl;
-        } cout << endl;
-
-        // Free
-        for (int i = 0; i < y_pxl; ++i) {
-            delete[] frame[i];
-        } delete[] frame;
-    }
-private:
-    void init_frame(char** frame) const {
-        for (int i = 0; i < y_pxl; ++i) {
-            for (int j = 0; j < x_pxl; ++j) {
-                frame[i][j] = 32; // 32 means "SPACE"
-            }
-        }
-    }
-    void draw_something(char** frame) const {
-        for (int i = 0; i < y_pxl; ++i) {
-            frame[i][0] = 42; // 42 means "*"
-            frame[i][x_pxl - 1] = 42;
-        }
-        for (int i = 0; i < x_pxl; ++i) {
-            frame[0][i] = 42;
-            frame[y_pxl - 1][i] = 42;
-        }
-    }
-};
-
 class TableHolder : public Holder {
     vector<vector<string>> content;
     int i_num, j_num;
 
 public:
-    TableHolder(const vector<string>& data) : Holder(data[0]), i_num(stoi(data[1])), j_num(stoi(data[2])) {
+    explicit TableHolder(const vector<string>& data) : Holder(data[0]), i_num(stoi(data[1])), j_num(stoi(data[2])) {
         show_title = false;
 
         int k = 3;
         for (int i = 0; i < i_num; ++i) {
-            content.push_back(vector<string>(j_num));
+            content.emplace_back(j_num);
             for (int j = 0; j < j_num; ++j) {
                 content[i][j] = data[k++];
             }
         }
     }
-    TableHolder(unsigned int _i = 1, unsigned int _j = 1) : Holder(), i_num(_i), j_num(_j) {
+    explicit TableHolder(unsigned int _i = 1, unsigned int _j = 1) : Holder(), i_num(_i), j_num(_j) {
         show_title = false;
 
         for (int i = 0; i < i_num; ++i) {
-            content.push_back(vector<string>(j_num));
+            content.emplace_back(j_num);
             for (int j = 0; j < j_num; ++j) {
                 content[i][j] = "";
             }
@@ -849,31 +710,25 @@ public:
         content[0][0] = "default";
     }
 
-    Type get_type() const override {
+    [[nodiscard]] TYPE get_type() const override {
         return TABLE_HOLDER;
     }
 
-    unique_ptr<string> to_txt_data() const override {
-        unique_ptr<string> ptr(new string);
-        *ptr += "<TABLE>\n";
+    [[nodiscard]] std::string to_txt_data() const override {
+        std::stringstream ss;
+        ss  << "<TABLE>\n" << title  << '\n' << std::to_string(i_num) << '\n'
+            << std::to_string(j_num) << '\n';
 
-        *ptr += title;
-        *ptr += '\n';
-        *ptr += std::to_string(i_num);
-        *ptr += '\n';
-        *ptr += std::to_string(j_num);
-        *ptr += '\n';
-
-        for (vector<string> vs : content) {
-            for (string s : vs) {
-                *ptr += s;
-                *ptr += '\n';
+        for (const auto& vs : content) {
+            for (const auto& s : vs) {
+                ss << s << '\n';
             }
         }
 
-        *ptr += "</TABLE>\n";
+        ss << "</TABLE>\n";
 
-        return ptr;
+        std::string ret; ss >> ret;
+        return ret;
     }
 
     void put(const string& str, unsigned int _i, unsigned int _j) {
@@ -883,18 +738,18 @@ public:
         content[_i][_j] = str;
     }
 
-    void show() const override {
+    void print() const override {
         if (show_title) {
             cout << title << endl;
         }
 
         // Store the maximum length string of each column
-        int block_size[j_num];
+        unsigned int block_size[j_num];
         for (int j = 0; j < j_num; ++j) {
             block_size[j] = maximum_len_thru_column(j);
         }
 
-        int j_pxl_size = 0;
+        unsigned int j_pxl_size = 0;
         for (int j = 0; j < j_num; ++j) {
             j_pxl_size += block_size[j];
         } j_pxl_size += j_num;
@@ -917,7 +772,7 @@ public:
     }
 
 private:
-    unsigned int maximum_len_thru_column(int j_idx) const {
+    [[nodiscard]] unsigned int maximum_len_thru_column(int j_idx) const {
         unsigned int max = 0;
         for (int i = 0; i < i_num; ++i) {
             if (max < content[i][j_idx].size()) {
@@ -1073,7 +928,7 @@ public:
         i_pxl = h;
     }
 
-    virtual void show() const override {
+    virtual void print() const override {
         Layer frame(i_pxl, j_pxl());
 
         this->set_axis(frame); // Draw x, y - axis
@@ -1107,15 +962,6 @@ protected:
             }
         }
         return max_len;
-    }
-
-    // Fill our frame into blank
-    void init_frame(char** frame) const {
-        for (int i = 0; i < i_pxl; ++i) {
-            for (int j = 0; j < j_pxl(); ++j) {
-                frame[i][j] = 32; // 32 means "SPACE"
-            }
-        }
     }
 
     // Draw x, y - axis
@@ -1161,7 +1007,7 @@ protected:
 
     // Get the maximum value of our data; We use this when we standardize our data (See standardize().)
     // If our data is {Label{"AAA", 2}, Label{"BBB", 12}, Label{"CCC", 10}}, then we get 12
-    double get_max_height() const {
+    [[nodiscard]] double get_max_height() const {
         double maxx = 0;
         for (Label l : label) {
             if (maxx < l.height) {
@@ -1207,43 +1053,32 @@ public:
     HistogramHolder(const vector<string>& data) : ChartHolder(data) {}
     HistogramHolder() : ChartHolder() {}
 
-    Type get_type() const override {
+    TYPE get_type() const override {
         return HISTOGRAM_HOLDER;
     }
 
     // Save method
-    unique_ptr<string> to_txt_data() const override {
-        unique_ptr<string> ptr(new string);
-        *ptr += "<HISTOGRAM>\n";
+    [[nodiscard]] std::string to_txt_data() const override {
+        std::stringstream ss;
+        ss << "<HISTOGRAM>\n" << title << '\n' <<
+        std::to_string(x_label_number) << '\n' << std::to_string(i_pxl) << '\n';
+        for (auto& [dataname, height] : label) {
+            ss << dataname << '\n' << height << '\n';
+        } ss << "</HISTOGRAM>\n";
 
-        *ptr += title;
-        *ptr += '\n';
-        *ptr += std::to_string(x_label_number);
-        *ptr += '\n';
-        *ptr += std::to_string(i_pxl);
-        *ptr += '\n';
-
-        for (Label l : label) {
-            *ptr += l.data_name;
-            *ptr += '\n';
-            *ptr += to_string(l.height);
-            *ptr += '\n';
-        }
-
-        *ptr += "</HISTOGRAM>\n";
-
-        return ptr;
+        std::string ret; ss >> ret;
+        return ret;
     }
 
     void put_line(Layer& frame) const override {
         // Set pivots
         vector<int> height_info = standardize();
-        int max_len = max_length_of_data_name();
+        unsigned int max_len = max_length_of_data_name();
         for (int p = 0; p < x_label_number; ++p) {
-            int pivot_i = i_pxl - 2 - height_info[p];
-            int pivot_j = 2 + p * (max_len + 1) + max_len / 2;
+            unsigned int pivot_i = i_pxl - 2 - height_info[p];
+            unsigned int pivot_j = 2 + p * (max_len + 1) + max_len / 2;
 
-            for (int i = pivot_i; i < i_pxl - 2; ++i) {
+            for (auto i = pivot_i; i < i_pxl - 2; ++i) {
                 frame[i][pivot_j] = '#';
             }
         }
@@ -1271,36 +1106,25 @@ class LineHolder : public ChartHolder {
 
 
 public:
-    LineHolder(const vector<string>& data) : ChartHolder(data) {}
+    explicit LineHolder(const vector<string>& data) : ChartHolder(data) {}
     LineHolder() : ChartHolder() {}
 
-    Type get_type() const override {
+    [[nodiscard]] TYPE get_type() const override {
         return LINE_HOLDER;
     }
 
     // Save method
-    unique_ptr<string> to_txt_data() const override {
-        // Type "Grimpan" only stores 2 data : x_pxl, y_pxl
-        unique_ptr<string> ptr(new string);
-        *ptr += "<LINE>\n";
+    [[nodiscard]] std::string to_txt_data() const override {
+        std::stringstream ss;
+        ss << "<LINE>\n" << title << '\n' <<
+        std::to_string(x_label_number) << '\n' << std::to_string(i_pxl) << '\n';
 
-        *ptr += title;
-        *ptr += '\n';
-        *ptr += std::to_string(x_label_number);
-        *ptr += '\n';
-        *ptr += std::to_string(i_pxl);
-        *ptr += '\n';
+        for (auto& [dataname, height] : label) {
+            ss << dataname << '\n' << height << '\n';
+        } ss << "</LINE>\n";
 
-        for (Label l : label) {
-            *ptr += l.data_name;
-            *ptr += '\n';
-            *ptr += to_string(l.height);
-            *ptr += '\n';
-        }
-
-        *ptr += "</LINE>\n";
-
-        return ptr;
+        std::string ret; ss >> ret;
+        return ret;
     }
 
 private:
@@ -1416,13 +1240,13 @@ public:
                 holders.push_back(p);
                 continue;
             }
-            if (data[i] == "<GRIMPAN>") {
+            if (data[i] == "<SHAPE_HOLDER>") {
                 vector<string> hold;
                 ++i;
-                while (data[i] != "</GRIMPAN>") {
+                while (data[i] != "</SHAPE_HOLDER>") {
                     hold.push_back(data[i++]);
                 }
-                Holder* p = new Grimpan(hold);
+                Holder* p = new ShapeHolder(hold);
                 holders.push_back(p);
                 continue;
             }
@@ -1480,7 +1304,7 @@ public:
     // Print method
     void print() const {
         for (Holder* p : holders) {
-            p->show();
+            p->print();
         }
     }
 
@@ -1489,19 +1313,19 @@ public:
         int i = 0;
         for (Holder* p : holders) {
             cout << "The holder #" << ++i;
-            Type type = p->get_type();
+            Holder::TYPE type = p->get_type();
             switch (type) {
-                case TEST_HOLDER:
+                case Holder::TEST_HOLDER:
                     cout << " is a TestHolder"; break;
-                case GRIMPAN:
-                    cout << " is a Grimpan"; break;
-                case STRING_HOLDER:
+                case Holder::SHAPE_HOLDER:
+                    cout << " is a ShapeHolder"; break;
+                case Holder::STRING_HOLDER:
                     cout << " is a StringHolder"; break;
-                case LINE_HOLDER:
+                case Holder::LINE_HOLDER:
                     cout << " is a LineHolder"; break;
-                case HISTOGRAM_HOLDER:
+                case Holder::HISTOGRAM_HOLDER:
                     cout << " is a HistogramHolder"; break;
-                case TABLE_HOLDER:
+                case Holder::TABLE_HOLDER:
                     cout << " is a TableHolder"; break;
                 default:
                     cout << " RAISED AN ERROR : UNKNOWN HOLDER"; break;
@@ -1611,7 +1435,7 @@ public:
         str += filename;
         str += "\n\n";
         for (Holder* p : holders) {
-            str += *p->to_txt_data();
+            str += p->to_txt_data();
         }
         return str;
     }
@@ -1642,13 +1466,13 @@ public:
     Listener(const vector<string>& sd, const vector<string>& strd) : how_many_words_do_you_want(10), doc_ptr(new Document(sd)), trie_ptr1(new Trie(strd)), trie_ptr2(new Trie(strd, [](const string& str) -> string {return mint_utils::reversed(str);}, [](const string& str) -> string {return mint_utils::reversed(str);})) {}
 
     ~Listener() {
-        if (doc_ptr != NULL) {
+        if (doc_ptr != nullptr) {
             delete doc_ptr;
         }
-        if (trie_ptr1 != NULL) {
+        if (trie_ptr1 != nullptr) {
             delete trie_ptr1;
         }
-        if (trie_ptr2 != NULL) {
+        if (trie_ptr2 != nullptr) {
             delete trie_ptr2;
         }
     }
@@ -1660,7 +1484,7 @@ public:
         cout << "Accessed to " << doc_ptr->get_filename() << " file.\n";
         cout << "To see the manual, input 0.\n\n";
 
-        while (1) {
+        while (true) {
             cout << "at Document-modifier INPUT COMMAND : ";
             cin >> command;
             cin.ignore(1000, '\n');
@@ -1690,7 +1514,7 @@ public:
                             throw ERRORS(OUT_OF_RANGE_ERROR, "at Listener::listen, case 10");
                         }
 
-                        doc_ptr->at(idx)->show(); break;
+                        doc_ptr->at(idx)->print(); break;
 
                     case 11:
                         cout << "Put an index number to access : ";
@@ -1848,17 +1672,17 @@ private:
         Holder* p = doc_ptr->at(n);
 
         // Check the type of holder and call prefer access functions.
-        if (p->get_type() == STRING_HOLDER) {
+        if (p->get_type() == Holder::STRING_HOLDER) {
             StringHolder* q = dynamic_cast<StringHolder*>(p);
             modify_str(q);
             return;
         }
-        if (p->get_type() == TABLE_HOLDER) {
+        if (p->get_type() == Holder::TABLE_HOLDER) {
             TableHolder* q = dynamic_cast<TableHolder*>(p);
             modify_tab(q);
             return;
         }
-        if (p->get_type() == LINE_HOLDER || p->get_type() == HISTOGRAM_HOLDER) {
+        if (p->get_type() == Holder::LINE_HOLDER || p->get_type() == Holder::HISTOGRAM_HOLDER) {
             LineHolder* q = dynamic_cast<LineHolder*>(p);
             modify_cha(q);
             return;
@@ -1874,9 +1698,9 @@ private:
 
         int command, idx, len;
         string input_str;
-        while (1) {
+        while (true) {
 
-            p->show();
+            p->print();
 
             cout << "at StringHolder-modifier INPUT COMMAND : ";
             cin >> command;
@@ -1891,7 +1715,7 @@ private:
                     print_str_manual(); break;
 
                 case 1:
-                    p->show(); break;
+                    p->print(); break;
 
                 case 3:
                     cout << "Put your new title : ";
@@ -1952,11 +1776,14 @@ private:
 
                 case 99:
                     p->spellcheck(*trie_ptr1, *trie_ptr2, how_many_words_do_you_want); break;
+
+                default:
+                    break;
             }
         }
     }
 
-    void print_str_manual() const {
+    static void print_str_manual() {
         cout << "Put 1 to print all CONTENTS of the holder." << endl;
         cout << "Put 3 to change the title of holder." << endl;
 
@@ -1966,7 +1793,7 @@ private:
         cout << "Put 11 to insert your text between the data." << endl;
         cout << "Put 20 to delete some elements between strings." << endl;
         cout << "Put 21 to replace some elements between string into other." << endl;
-        cout << "Put 50 to show title." << endl;
+        cout << "Put 50 to print title." << endl;
         cout << "Put 51 to hide title." << endl;
 
         cout << endl;
@@ -1982,9 +1809,9 @@ private:
         int command, _i, _j;
         string input_str;
 
-        while (1) {
+        while (true) {
 
-            p->show();
+            p->print();
 
             cout << "at TableHolder-modifier INPUT COMMAND : ";
             cin >> command;
@@ -1999,7 +1826,7 @@ private:
                     print_tab_manual(); break;
 
                 case 1:
-                    p->show(); break;
+                    p->print(); break;
 
                 case 3:
                     cout << "Put your new title : ";
@@ -2023,18 +1850,21 @@ private:
 
                 case 51:
                     p->title_off(); break;
+
+                default:
+                    break;
             }
         }
     }
 
-    void print_tab_manual() const {
+    static void print_tab_manual() {
         cout << "Put 1 to print all CONTENTS of the holder." << endl;
         cout << "Put 3 to change the title of holder." << endl;
 
         cout << endl;
 
         cout << "Put 10 to change an element in the table." << endl;
-        cout << "Put 50 to show title." << endl;
+        cout << "Put 50 to print title." << endl;
         cout << "Put 51 to hide title." << endl;
 
         cout << endl;
@@ -2052,7 +1882,7 @@ private:
 
         while (1) {
 
-            p->show();
+            p->print();
 
             cout << "at ChartHolder-modifier INPUT COMMAND : ";
             cin >> command;
@@ -2064,16 +1894,19 @@ private:
 
             switch (command) {
                 case 0:
-                    print_cha_manual(); break;
+                    print_cha_manual();
+                    break;
 
                 case 1:
-                    p->show(); break;
+                    p->print();
+                    break;
 
                 case 3:
                     cout << "Put your new title : ";
                     getline(cin, input_str);
 
-                    p->set_title(input_str); break;
+                    p->set_title(input_str);
+                    break;
 
                 case 10:
                     cout << "Put the text you want to push : ";
@@ -2083,17 +1916,20 @@ private:
                     cin >> data;
                     cin.ignore(1000, '\n');
 
-                    p->push(input_str, data); break;
+                    p->push(input_str, data);
+                    break;
 
                 case 11:
-                    p->pop(); break;
+                    p->pop();
+                    break;
 
                 case 20:
                     cout << "Put the vertical size you want : ";
                     cin >> height;
                     cin.ignore(1000, '\n');
 
-                    p->modify_i_size(height); break;
+                    p->modify_i_size(height);
+                    break;
 
                 case 21:
                     cout << "Put the index number : ";
@@ -2104,7 +1940,8 @@ private:
                     cout << "Put the text you want to replace : ";
                     getline(cin, input_str);
 
-                    p->modify_dataname(input_str, idx); break;
+                    p->modify_dataname(input_str, idx);
+                    break;
 
                 case 22:
                     cout << "Put the index number : ";
@@ -2116,18 +1953,24 @@ private:
                     cin >> height;
                     cin.ignore(1000, '\n');
 
-                    p->modify_height(height, idx); break;
+                    p->modify_height(height, idx);
+                    break;
 
                 case 50:
-                    p->title_on(); break;
+                    p->title_on();
+                    break;
 
                 case 51:
-                    p->title_off(); break;
+                    p->title_off();
+                    break;
+
+                default:
+                    break;
             }
         }
     }
 
-    void print_cha_manual() const {
+    static void print_cha_manual() {
         cout << "Put 1 to print all CONTENTS of the holder." << endl;
         cout << "Put 3 to change the title of holder." << endl;
 
@@ -2138,7 +1981,7 @@ private:
         cout << "Put 20 to modify the vertical size of the graph." << endl;
         cout << "Put 21 to modify the data name." << endl;
         cout << "Put 22 to modify the height." << endl;
-        cout << "Put 50 to show title." << endl;
+        cout << "Put 50 to print title." << endl;
         cout << "Put 51 to hide title." << endl;
 
         cout << endl;
@@ -2150,7 +1993,7 @@ private:
         ofstream ofile("tester.txt");
         ofile << doc_ptr->save();
 
-        cout << "The document is succesfully saved." << endl;
+        cout << "The document is successfully saved." << endl;
     }
 };
 

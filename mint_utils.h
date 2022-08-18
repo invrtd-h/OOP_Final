@@ -7,18 +7,17 @@
 
 namespace mint_utils {
 
-    template<typename T>
-    auto identity_func = [](const T& t) -> T {
-        return t;
-    };
-
     std::string                 make_lowercase(std::string str);
     std::vector<std::string>    split(const std::string& str);
     std::string                 reversed(std::string str);
+    std::string                 identity(std::string str);
+
+
+
 
     // TODO : move this function to Trie class
     unsigned int closeness(const std::string& s1, const std::string& s2,
-                           const auto& init = identity_func<std::string>) {
+                           const auto& init = identity) {
         std::string str1 = init(s1);
         std::string str2 = init(s2);
 
@@ -31,6 +30,8 @@ namespace mint_utils {
                 return ret;
             }
         }
+
+        return size;
     }
 }
 
