@@ -8,6 +8,22 @@
 #include "mint_utils.h"
 
 class Holder {
+protected:
+    template<typename T>
+    class StaticList {
+        std::vector<T>      v;
+    public:
+        explicit            StaticList(size_t n) : v(n) {}
+                            StaticList(size_t n, const T& t) : v(n, t) {}
+
+        T&                  operator[](int idx);
+        const T&            operator[](int idx) const;
+        [[nodiscard]] int   size() const noexcept;
+    };
+
+    using SubLayer  = StaticList<char>;
+    using Layer     = StaticList<SubLayer>;
+
 public:
     enum TYPE {HOLDER, TEST_HOLDER, SHAPE_HOLDER, STRING_HOLDER, TABLE_HOLDER, LINE_HOLDER, HISTOGRAM_HOLDER};
 
@@ -56,6 +72,25 @@ public:
     void print() const override {
 
     }
+};
+
+class TableHolder : public Holder {
+    std::vector<std::vector<std::string>>       content;
+    unsigned int                                i_num, j_num;
+
+public:
+    explicit                                    TableHolder(const std::vector<std::string>& data);
+    explicit                                    TableHolder(unsigned int _i = 1, unsigned int _j = 1);
+
+    [[nodiscard]] TYPE                          get_type() const override;
+    [[nodiscard]] std::string                   to_txt_data() const override;
+
+    void                                        put(const std::string& str, unsigned int _i, unsigned int _j);
+    void                                        print() const override;
+
+private:
+    [[nodiscard]] unsigned int                  maximum_len_thru_column(int j_idx) const;
+    static void                                 print_block(const std::string& str, unsigned int block_size);
 };
 
 #endif //OOPFINAL_HOLDERS_H

@@ -32,10 +32,10 @@ std::string mints::identity(std::string str) {
     return str;
 }
 
-mints::double_alloc::double_alloc(std::string s) : std::exception(), err_msg(std::move(s)) {}
+const char *mints::named_exception::what() const noexcept {
+    return err_msg.c_str();
+}
 
-const char *mints::double_alloc::what() const noexcept {return err_msg.c_str();}
+mints::named_exception::named_exception(std::string &&s) : err_msg(s) {}
 
-mints::double_free::double_free(std::string s) : std::exception(), err_msg(std::move(s)) {}
-
-const char *mints::double_free::what() const noexcept {return err_msg.c_str();}
+mints::named_exception::named_exception(const std::string &s) : err_msg(s) {}

@@ -317,116 +317,6 @@ public:
 
 };
 
-class TableHolder : public Holder {
-    vector<vector<string>> content;
-    int i_num, j_num;
-
-public:
-    explicit TableHolder(const vector<string>& data) : Holder(data[0]), i_num(stoi(data[1])), j_num(stoi(data[2])) {
-        show_title = false;
-
-        int k = 3;
-        for (int i = 0; i < i_num; ++i) {
-            content.emplace_back(j_num);
-            for (int j = 0; j < j_num; ++j) {
-                content[i][j] = data[k++];
-            }
-        }
-    }
-    explicit TableHolder(unsigned int _i = 1, unsigned int _j = 1) : Holder(), i_num(_i), j_num(_j) {
-        show_title = false;
-
-        for (int i = 0; i < i_num; ++i) {
-            content.emplace_back(j_num);
-            for (int j = 0; j < j_num; ++j) {
-                content[i][j] = "";
-            }
-        }
-        content[0][0] = "default";
-    }
-
-    [[nodiscard]] TYPE get_type() const override {
-        return TABLE_HOLDER;
-    }
-
-    [[nodiscard]] std::string to_txt_data() const override {
-        std::stringstream ss;
-        ss  << "<TABLE>\n" << title  << '\n' << std::to_string(i_num) << '\n'
-            << std::to_string(j_num) << '\n';
-
-        for (const auto& vs : content) {
-            for (const auto& s : vs) {
-                ss << s << '\n';
-            }
-        }
-
-        ss << "</TABLE>\n";
-
-        std::string ret; ss >> ret;
-        return ret;
-    }
-
-    void put(const string& str, unsigned int _i, unsigned int _j) {
-        if (_i >= i_num || _j >= j_num) {
-            cout << "Invalid index" << endl;
-        }
-        content[_i][_j] = str;
-    }
-
-    void print() const override {
-        if (show_title) {
-            cout << title << endl;
-        }
-
-        // Store the maximum length string of each column
-        unsigned int block_size[j_num];
-        for (int j = 0; j < j_num; ++j) {
-            block_size[j] = maximum_len_thru_column(j);
-        }
-
-        unsigned int j_pxl_size = 0;
-        for (int j = 0; j < j_num; ++j) {
-            j_pxl_size += block_size[j];
-        } j_pxl_size += j_num;
-
-        for (int i = 0; i < i_num; ++i) {
-            for (int j_pxl = 0; j_pxl < j_pxl_size; ++j_pxl) {
-                cout << '-';
-            }
-            cout << endl;
-            for (int j = 0; j < j_num; ++j) {
-                cout << '|';
-                print_block(content[i][j], block_size[j]);
-            }
-            cout << endl;
-        }
-        for (int j_pxl = 0; j_pxl < j_pxl_size; ++j_pxl) {
-            cout << '-';
-        }
-        cout << endl;
-    }
-
-private:
-    [[nodiscard]] unsigned int maximum_len_thru_column(int j_idx) const {
-        unsigned int max = 0;
-        for (int i = 0; i < i_num; ++i) {
-            if (max < content[i][j_idx].size()) {
-                max = (unsigned int) content[i][j_idx].size();
-            }
-        }
-
-        return max;
-    }
-
-    static void print_block(const string& str, int block_size) {
-        string empty_space;
-        for (int i = 0; i < block_size - str.size(); ++i) {
-            empty_space.push_back(' ');
-        }
-        cout << str << empty_space;
-    }
-};
-
 class ChartHolder : public Holder {
 
 protected:
@@ -477,7 +367,7 @@ protected:
     public:
         Layer(int _i, int _j) : i_pxl(_i), j_pxl(_j) {
             if (_i <= 0 || _j <= 0 || _i > 10000 || _j > 10000) {
-                throw ERRORS(TOO_LARGE_ARGUMENT_ERROR, "at Layer::Layer");
+                throw mints::too_large_argument("required too large size of layer, at Layer::Layer");
             }
             vvc = new SubLayer[_i];
             for (int i = 0; i < _i; ++i) {
@@ -563,7 +453,7 @@ public:
         i_pxl = h;
     }
 
-    virtual void print() const override {
+    void print() const override {
         Layer frame(i_pxl, j_pxl());
 
         this->set_axis(frame); // Draw x, y - axis
