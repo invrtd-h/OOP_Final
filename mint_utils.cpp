@@ -1,6 +1,6 @@
 #include "mint_utils.h"
 
-std::string mint_utils::make_lowercase(std::string str) {
+std::string mints::make_lowercase(std::string str) {
     for (char &i: str) {
         if (65 <= i && i <= 90) {
             i += 32;
@@ -9,7 +9,7 @@ std::string mint_utils::make_lowercase(std::string str) {
     return str;
 }
 
-std::vector<std::string> mint_utils::split(const std::string &str) {
+std::vector<std::string> mints::split(const std::string &str) {
     std::vector<std::string> vecstr(1);
     for (char c : str) {
         if (65 <= c && c <= 90) {
@@ -23,11 +23,19 @@ std::vector<std::string> mint_utils::split(const std::string &str) {
     return vecstr;
 }
 
-std::string mint_utils::reversed(std::string str) {
+std::string mints::reversed(std::string str) {
     std::reverse(str.begin(), str.end());
     return str;
 }
 
-std::string mint_utils::identity(std::string str) {
+std::string mints::identity(std::string str) {
     return str;
 }
+
+mints::double_alloc::double_alloc(std::string s) : std::exception(), err_msg(std::move(s)) {}
+
+const char *mints::double_alloc::what() const noexcept {return err_msg.c_str();}
+
+mints::double_free::double_free(std::string s) : std::exception(), err_msg(std::move(s)) {}
+
+const char *mints::double_free::what() const noexcept {return err_msg.c_str();}

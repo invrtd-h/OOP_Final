@@ -2,9 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <utility>
-#include <memory>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -23,6 +21,7 @@ class Listener;
 
 #include "mint_utils.h"
 #include "holders.h"
+#include "trie.h"
 
 using namespace std;
 
@@ -31,371 +30,7 @@ enum ERROR_INFO {OUT_OF_RANGE_ERROR, UNPOPPABLE_CONTAINER_ERROR, TOO_LARGE_ARGUM
 struct ERRORS {
     ERROR_INFO error_info;
     string error_message;
-    ERRORS(ERROR_INFO e, const string& s) : error_info(e), error_message(s) {}
-};
-
-class Node {
-protected:
-    char ch;
-    int level, offspring_num;
-    Node* next[26];
-    string* to_data;
-
-public:
-    Node(char _c, int _level) : ch(_c), level(_level), to_data(nullptr), offspring_num(0) {
-        for (auto& i : next) {
-            i = nullptr;
-        }
-    }
-    virtual ~Node() {
-        // cout << ch << " Node with offspring " << offspring_num << " deleted" << endl;
-        for (auto& i : next) {
-            if (i != nullptr) {
-                delete i;
-            }
-        }
-        if (to_data != nullptr) {
-            delete to_data;
-        }
-    }
-
-    Node(const Node&) = delete;
-    Node(const Node&&) = delete;
-    Node& operator=(const Node&) = delete;
-
-    // Add some nodes
-    void put(char c) {
-        if (next[c - 97] == nullptr) { // For some make_lowercase char c, (c - 97) converts a to 0, b to 1, ... z to 25
-            next[c - 97] = new Node(c, level + 1);
-            ++offspring_num;
-        } else {
-            // This is a debug message : If you saw this message, then even if there is no compile error, it may cause a logical error.
-            cout << "PUT ERROR AT NODE::PUT FUNCTION : TRIED TO MAKE A NEW NODE AT ALREADY-ALLOCATED POINTER" << endl;
-        }
-    }
-    // Add a string at end node : The node with non-NULL string* to_data means that it is the end node.
-    void put(const string& str) {
-        to_data = new string;
-        *to_data = str;
-        ++offspring_num;
-    }
-    // Delete an offspring node
-    void remove(char c) {
-        if (next[c - 97] != nullptr) {
-            delete next[c - 97];
-            next[c - 97] = nullptr;
-            --offspring_num;
-        } else {
-            // This is a debug message : If you saw this message, then even if there is no compile error, it may cause a logical error.
-            cout << "REMOVE ERROR AT NODE::REMOVE FUNCTION : TRIED TO REMOVE A NODE AT NON-ALLOCATED POINTER" << endl;
-        }
-    }
-    // Delete string*
-    void remove() {
-        if (to_data != nullptr) {
-            delete to_data;
-            to_data = nullptr;
-            --offspring_num;
-        } else {
-            // This is a debug message : If you saw this message, then even if there is no compile error, it may cause a logical error.
-            cout << "REMOVE ERROR AT NODE::REMOVE FUNCTION : TRIED TO REMOVE A STRING AT NON-ALLOCATED POINTER" << endl;
-        }
-    }
-    // Get functions
-    char get_char() const {
-        return ch;
-    }
-    Node* get_next(int idx) const {
-        idx -= 97;
-        if (0 <= idx && idx < 26) {
-            return next[idx];
-        }
-        return nullptr;
-    }
-    int get_level() const {
-        return level;
-    }
-    int get_offspring_num() const {
-        return offspring_num;
-    }
-    string* get_strptr() const {
-        return to_data;
-    }
-    // Get functions end
-
-    // Traversal function
-    vector<string> traverse(const int MAX_VEC_SIZE) const {
-        vector<string> vecstr;
-        vecstr.reserve(MAX_VEC_SIZE);
-
-        // Do Depth-First-Search and get all strings contained at the end node.
-        vector<const Node*> stack;
-        stack.push_back(this);
-
-        while (!stack.empty()) {
-            const Node* popped = stack.back();
-            stack.pop_back();
-
-            if (popped->to_data != nullptr) {
-                vecstr.push_back(*popped->to_data);
-                if (vecstr.size() >= MAX_VEC_SIZE) {
-                    break;
-                }
-            }
-
-            for (int i = 25; i >= 0; --i) {
-                if (popped->next[i] != nullptr) {
-                    stack.push_back(popped->next[i]);
-                }
-            }
-        }
-
-        return vecstr;
-    }
-
-    // Depth-First-Search method.
-protected:
-    void depth_first_search(string& str) const {
-        str += ch;
-        for (auto i : next) {
-            if (i != nullptr) {
-                i->depth_first_search(str);
-            }
-        }
-        if (97 <= str.back() && str.back() <= 122) {
-            str += '0';
-        } else {
-            ++str.back();
-        }
-    }
-};
-
-class Trie : public Node {
-    /*
-     "Trie" class is used to implement a powerful data structure called "Trie" : Check the description of "Node" class.
-     "Trie" class inherits "Node" class, and it has no additional data but has some useful methods:
-     We did this due to obey the Data-hiding rule. We want to apply these methods only at the root node of "Trie".
-     If not, we will get a garbage value.
-     */
-    function<string(const string&)> preprocess, backprocess;
-public:
-    Trie(function<string(const string&)> f = [](const string& s) -> string {return s;},
-         function<string(const string&)> g = [](const string& s) -> string {return s;})
-            : Node(35, 0), preprocess(f), backprocess(g) {} // Character number 35 means "#"; Initializes the top node
-    Trie(const vector<string>& vs,
-         function<string(const string&)> f = [](const string& s) -> string {return s;},
-         function<string(const string&)> g = [](const string& s) -> string {return s;})
-            : Node(35, 0), preprocess(f), backprocess(g) {
-        for (string str : vs) {
-            push(str);
-        }
-    }
-
-    Trie(const Trie&) = delete;
-    Trie(const Trie&&) = delete;
-    Trie& operator=(const Trie&) = delete;
-
-private:
-    /*
-     deepest_node_so_far searches the 'nearest' node with the given string.
-     Here, we define the 'closeness' of two string as the length of the longest common prefix: i.e. the 'closeness' between 'standard' and 'stainless' is 3 == len(sta).
-     i.e. if the Trie is given like this:
-            #      (Lv.0)
-           / \
-          s   r    (Lv.1)
-         /   / \
-        t   g   h  (Lv.2)
-       =st =rg =rh
-     then deepest_node_so_far(rg) returns g at Lv.2;
-     deepest_node_so_far(rt) returns r at Lv.1;
-     deepest_node_so_far(tr) returns # at Lv.0.
-     */
-    const Node* deepest_node_so_far(const string& str) const {
-        const Node* travel = this;
-        for (char c : str) {
-            if (travel->get_next(c) == NULL) {
-                return travel;
-            }
-            travel = travel->get_next(c);
-        }
-        return travel;
-    }
-
-    /*
-     if_contained_get_lowest_nonbranch(str) returns the lowest nonbranch node on the way to 'str' node if 'str' is in our Tree, otherwise return NULL.
-     Here, the definition of "branch node" is the node whose all subnodes have only 1 connected offspring.
-     i.e. if the Trie is given like this:
-            #      (Lv.0)
-           / \
-          s   r    (Lv.1)
-         /   / \
-        t   g   h  (Lv.2)
-       =st =rg =rh
-     then if_contained_get_lowest_nonbranch(rh) returns r at Lv.1;
-     if_contained_get_lowest_nonbranch(st) returns # at Lv.0;
-     if_contained_get_lowest_nonbranch(sg) returns NULL.
-     */
-    const Node* if_contained_get_lowest_nonbranch(const string& str) const {
-        // A stack containing all travelled node so far
-        vector<const Node*> nodes_so_far;
-
-        const Node* travel = this;
-        nodes_so_far.push_back(travel);
-        for (char c : str) {
-            if (travel->get_next(c) == nullptr) {
-                // If str is not contained in our Trie, then return NULL
-                return nullptr;
-            }
-            travel = travel->get_next(c);
-            nodes_so_far.push_back(travel);
-        }
-
-        if (*travel->get_strptr() == str) {
-            while (nodes_so_far.back()->get_offspring_num() == 1) {
-                nodes_so_far.pop_back();
-            }
-            if (nodes_so_far.empty()) {
-                return this;
-            } else {
-                return nodes_so_far.back();
-            }
-        }
-
-        return nullptr;
-    }
-
-public:
-    // __contains__ : Return true if str is in Trie, else return false
-    bool __contains__(const string& input) const {
-        string str = preprocess(input);
-        // Check whether the pushed string does not contain non-make_lowercase-alphabet characters
-        for (char c : str) {
-            if (c < 97 || c > 122) { // 97 == 'a', 122 == 'z'
-                // if a non-make_lowercase-alphabet character is found, then it is not contained in our Trie.
-                return false;
-            }
-        }
-
-        // Delete the const feature; now ptr is no more const Node* pointer.
-        Node* ptr = const_cast<Node*>(deepest_node_so_far(str));
-
-        if (ptr->get_level() == str.size()) {
-            string* temp = ptr->get_strptr();
-            if (temp != nullptr && *temp == str) {
-                // If we found the str in our Trie, then return true.
-                return true;
-            }
-        }
-
-        // Otherwise, return false.
-        return false;
-    }
-
-    // push : Push str into our Trie
-    void push(const string& input) {
-        const string str = preprocess(input);
-        // Check whether the pushed string does not contain non-make_lowercase-alphabet characters
-        for (char c : str) {
-            if (c < 97 || c > 122) { // 97 == 'a', 122 == 'z'
-                // if a non-make_lowercase-alphabet character is found, then do nothing
-                return;
-            }
-        }
-
-        // Delete the const feature; now ptr is no more const Node* pointer.
-        Node* ptr = const_cast<Node*>(deepest_node_so_far(str));
-
-        if (ptr->get_level() == str.size()) {
-            string* temp = ptr->get_strptr();
-            if (temp != nullptr && *temp == str) {
-                // If str already exists in our Trie, then do nothing.
-                return;
-            }
-        }
-
-        // Input new nodes along the given string.
-        for (int i = ptr->get_level(); i < str.size(); ++i) {
-            ptr->put(str[i]);
-            ptr = ptr->get_next(str[i]);
-        }
-
-        // Input a string at end node, to mark that this is the end node.
-        ptr->put(str);
-    }
-
-    // remove
-    void remove(const string& str) {
-        // Check whether the pushed string does not contain non-make_lowercase-alphabet characters
-        for (char c : str) {
-            if (c < 97 || c > 122) { // 97 == 'a', 122 == 'z'
-                // if a non-make_lowercase-alphabet character is found, then our Trie may do not contain it: Do nothing.
-                return;
-            }
-        }
-
-        // Delete the const feature; now ptr is no more const Node* pointer.
-        Node* ptr = const_cast<Node*>(if_contained_get_lowest_nonbranch(str));
-
-        if (ptr == nullptr) {
-            // If str is not contained in our Trie, then do nothing.
-            return;
-        }
-
-        // If str is contained in our Trie, and there is no branch on our path, then just delete
-        if (ptr->get_level() == str.size()) {
-            ptr->remove();
-        } else {
-            // If str is contained in our Trie, and there is a branch on our path, then delete the branch
-            ptr->remove(str[ptr->get_level()]);
-        }
-    }
-
-    /*
-     Some powerful suggestion functions.
-     If our Trie has {WHEREVER, WHETHER, WHICH, WHICHEVER, WHIFF, WHIG} and we search "WHICEVER",
-     then it will return {WHICH, WHICHEVER} whose components has most 'closeness'. Here, the definition of
-     'closeness' at the description of Trie::deepest_node_so_far() function.
-     */
-    vector<string> get_suggestions(const string& input, const int MAX_SUGGESTIONS) const {
-        const string to_search = preprocess(input);
-
-        // Find the closest prefix in our dictionary
-        const Node* search_start_node = deepest_node_so_far(to_search);
-        // Load all strings with same prefixes in our dictionary
-        vector<string> ret = search_start_node->traverse(MAX_SUGGESTIONS);
-
-        for (auto& i : ret) {
-            i = backprocess(i);
-        }
-
-        return ret;
-    }
-
-    void print_suggestions(const string& input, const int MAX_SUGGESTIONS) const {
-        vector<string> suggests = get_suggestions(input, MAX_SUGGESTIONS);
-
-        cout << "The alternative words for word '" << input << "' are: " << endl;
-        for (const string& str : suggests) {
-            cout << str << " | ";
-        } cout << endl;
-    }
-
-    // to_txt_data
-    string to_txt_data() const {
-        string txt_holder;
-
-        depth_first_search(txt_holder);
-
-        return txt_holder;
-    }
-
-    // getter functions
-    function<string(const string&)> get_preprocess() const {
-        return preprocess;
-    }
-    function<string(const string&)> get_backprocess() const {
-        return backprocess;
-    }
+    ERRORS(ERROR_INFO e, string s) : error_info(e), error_message(std::move(s)) {}
 };
 
 class Clipboard {
@@ -414,7 +49,7 @@ public:
     }
 
     // Bring out a string to paste it
-    const string& get(unsigned int n) const {
+    [[nodiscard]] const string& get(unsigned int n) const {
         if (n < 100) {
             return arr[n];
         } else {
@@ -484,7 +119,7 @@ private:
             } else if (97 <= data[i] && data[i] <= 122) {
                 vecpair.back().first += data[i];
             } else if (!vecpair.back().first.empty()) {
-                vecpair.push_back(pair<string, int>("", i + 1));
+                vecpair.emplace_back("", i + 1);
             } else {
                 ++vecpair.back().second;
             }
@@ -568,9 +203,9 @@ public:
 
         unsigned int idx = -1;
 
-        for (pair<string, int> pairpair : vecpair) {
-            string str = mint_utils::make_lowercase(pairpair.first);
-            if (!trie.__contains__(str)) {
+        for (const pair<string, int>& pairpair : vecpair) {
+            string str = mints::make_lowercase(pairpair.first);
+            if (!trie._contains_(str)) {
                 // Get our suggests list in our Trie
                 vector<string> suggests = trie.get_suggestions(str, MAX_SUGGESTIONS);
 
@@ -616,9 +251,9 @@ public:
 
         unsigned int idx = -1;
 
-        for (pair<string, int> pairpair : vecpair) {
-            string str = mint_utils::make_lowercase(pairpair.first);
-            if (trie1.__contains__(str)) {
+        for (const pair<string, int>& pairpair : vecpair) {
+            string str = mints::make_lowercase(pairpair.first);
+            if (trie1._contains_(str)) {
                 // If our letter is in out trie, i.e. right spell, then just pass
                 continue;
             }
@@ -639,7 +274,7 @@ public:
 
             // The lambda function in the 3rd component of 'sort' is a function that reads two string pointers (lhs, rhs) and return whether *lhs is closer to 'str' than *rhs.
             sort(ptrs, ptrs + suggests.size(), [str, &read_dir_1, &read_dir_2](string* lhs, string* rhs) -> bool {
-                return mint_utils::closeness(*lhs, str, read_dir_1) + mint_utils::closeness(*lhs, str, read_dir_2) > mint_utils::closeness(*rhs, str, read_dir_1) + mint_utils::closeness(*rhs, str, read_dir_2);
+                return mints::closeness(*lhs, str, read_dir_1) + mints::closeness(*lhs, str, read_dir_2) > mints::closeness(*rhs, str, read_dir_1) + mints::closeness(*rhs, str, read_dir_2);
             });
 
             // If MAX_SUGGESTIONS = 20 and suggests.size() = 15, then we suggest 15 words
@@ -783,7 +418,7 @@ private:
         return max;
     }
 
-    void print_block(const string& str, int block_size) const {
+    static void print_block(const string& str, int block_size) {
         string empty_space;
         for (int i = 0; i < block_size - str.size(); ++i) {
             empty_space.push_back(' ');
@@ -802,11 +437,11 @@ protected:
         int j_pxl;
 
     public:
-        SubLayer() : j_pxl(0), vc(NULL) {
+        SubLayer() : j_pxl(0), vc(nullptr) {
             // Do nothing
         }
         ~SubLayer() {
-            if (vc != NULL) {
+            if (vc != nullptr) {
                 // If something is allocated at vc, then delete it
                 delete[] vc;
             }
@@ -869,14 +504,14 @@ protected:
     struct Label {
         string data_name;
         double height;
-        Label(const string& _x, double _height) : data_name(_x), height(_height) {}
+        Label(string _x, double _height) : data_name(std::move(_x)), height(_height) {}
     };
 
     int i_pxl, x_label_number;
     vector<Label> label;
 
 public:
-    ChartHolder(const vector<string>& data) : Holder(data[0]), x_label_number(stoi(data[1])), i_pxl(stoi(data[2])) {
+    explicit ChartHolder(const vector<string>& data) : Holder(data[0]), x_label_number(stoi(data[1])), i_pxl(stoi(data[2])) {
         show_title = true;
 
         int j = 3;
@@ -885,18 +520,18 @@ public:
             ++j;
             const double temp2 = stod(data[j]);
             ++j;
-            label.push_back(Label(temp, temp2));
+            label.emplace_back(temp, temp2);
         }
     }
     ChartHolder() : Holder(), x_label_number(1), i_pxl(7) {
         show_title = true;
 
-        label.push_back(Label("default", 10));
+        label.emplace_back("default", 10);
     }
 
     // Modify
     void push(const string& str, double height) {
-        label.push_back(Label(str, height));
+        label.emplace_back(str, height);
         ++x_label_number;
     }
     void pop() {
@@ -948,14 +583,14 @@ protected:
 
     virtual void put_line(Layer& frame) const = 0;
 
-    unsigned int j_pxl() const {
+    [[nodiscard]] unsigned int j_pxl() const {
         return (max_length_of_data_name() + 1) * x_label_number + 2;
     }
 
     // the longest data name in our data
-    unsigned int max_length_of_data_name() const {
+    [[nodiscard]] unsigned int max_length_of_data_name() const {
         int max_len = 0;
-        for (Label l : label) {
+        for (const Label& l : label) {
             int siz = (int) l.data_name.size();
             if (max_len < siz) {
                 max_len = siz;
@@ -999,7 +634,7 @@ protected:
     }
     // Draw the data-name at our x - axis
     void set_data_name(Layer& frame) const {
-        int max_len = max_length_of_data_name();
+        auto max_len = max_length_of_data_name();
         for (int j = 0; j < x_label_number; j++) {
             put_str_into_frame(frame, label[j].data_name, i_pxl - 1, 2 + j * (max_len + 1));
         }
@@ -1009,7 +644,7 @@ protected:
     // If our data is {Label{"AAA", 2}, Label{"BBB", 12}, Label{"CCC", 10}}, then we get 12
     [[nodiscard]] double get_max_height() const {
         double maxx = 0;
-        for (Label l : label) {
+        for (const Label& l : label) {
             if (maxx < l.height) {
                 maxx = l.height;
             }
@@ -1018,15 +653,15 @@ protected:
     }
     // If we have a data of height 100, but only 10 pixels are allocated, then we cannot print the given data;
     // So we use standardize() function. If we have {10, 20, 40} and our allocated height is 8, then it will return {2, 4, 8}.
-    vector<int> standardize() const {
+    [[nodiscard]] vector<int> standardize() const {
         vector<int> ret;
         ret.reserve(x_label_number);
 
         double max_height = get_max_height();
         int max_pixel = i_pxl - 2; // Since the last 2 pixels are allocated representing axes
 
-        for (Label l : label) {
-            int temp = round(l.height / max_height * max_pixel);
+        for (const Label& l : label) {
+            int temp = static_cast<int>(round(l.height / max_height * max_pixel));
             ret.push_back(temp);
         }
 
@@ -1050,10 +685,10 @@ class HistogramHolder : public ChartHolder {
      */
 
 public:
-    HistogramHolder(const vector<string>& data) : ChartHolder(data) {}
+    explicit HistogramHolder(const vector<string>& data) : ChartHolder(data) {}
     HistogramHolder() : ChartHolder() {}
 
-    TYPE get_type() const override {
+    [[nodiscard]] TYPE get_type() const override {
         return HISTOGRAM_HOLDER;
     }
 
@@ -1130,10 +765,10 @@ public:
 private:
 
     // This draws a line between the point (i1, j1) and (i2, j2)
-    void put_segment(Layer& frame, int i1, int j1, int i2, int j2) const {
+    static void put_segment(Layer& frame, int i1, int j1, int i2, int j2) {
 
         for (int j = j1 + 1; j < j2; ++j) {
-            int i = round((double)(i2 - i1) / (double)(j2 - j1) * (j - j1) + i1);
+            int i = static_cast<int>(round((double)(i2 - i1) / (double)(j2 - j1) * (j - j1) + i1));
             frame[i][j] = '-';
         }
     }
@@ -1141,7 +776,7 @@ private:
 
         // Set pivots
         vector<int> height_info = standardize();
-        int max_len = max_length_of_data_name();
+        auto max_len = max_length_of_data_name();
         for (int p = 0; p < x_label_number; ++p) {
             frame[i_pxl - 2 - height_info[p]][2 + p * (max_len + 1) + max_len / 2] = '#';
             /*
@@ -1224,7 +859,7 @@ private:
     vector<Holder*> holders;
     string filename;
 public:
-    Document(const vector<string>& data) : filename(data[0]) {
+    explicit Document(const vector<string>& data) : filename(data[0]) {
         /*
          vector<Holder*> 'holders' contains Holder* pointers, and each of it points an individual holder.
          To set a new holder, we push a new Holder* pointer and dynamically allocate it.
@@ -1410,7 +1045,7 @@ public:
             return;
         }
 
-        if (holders.back() != NULL) {
+        if (holders.back() != nullptr) {
             delete holders.back();
         }
         holders.pop_back();
@@ -1423,14 +1058,14 @@ public:
         }
 
         Holder*& to_be_del = holders[idx];
-        if (to_be_del != NULL) {
+        if (to_be_del != nullptr) {
             delete to_be_del;
         }
         holders.erase(holders.begin() + idx);
     }
 
     // Save.
-    string save() const {
+    [[nodiscard]] string save() const {
         string str;
         str += filename;
         str += "\n\n";
@@ -1446,10 +1081,10 @@ public:
     }
 
     // get functions
-    unsigned int size() const {
+    [[nodiscard]] unsigned int size() const {
         return (unsigned int) holders.size();
     }
-    string get_filename() const {
+    [[nodiscard]] string get_filename() const {
         return filename;
     }
 };
@@ -1463,7 +1098,7 @@ class Listener {
 
 public:
 
-    Listener(const vector<string>& sd, const vector<string>& strd) : how_many_words_do_you_want(10), doc_ptr(new Document(sd)), trie_ptr1(new Trie(strd)), trie_ptr2(new Trie(strd, [](const string& str) -> string {return mint_utils::reversed(str);}, [](const string& str) -> string {return mint_utils::reversed(str);})) {}
+    Listener(const vector<string>& sd, const vector<string>& strd) : how_many_words_do_you_want(10), doc_ptr(new Document(sd)), trie_ptr1(new Trie(strd)), trie_ptr2(new Trie(strd, [](const string& str) -> string {return mints::reversed(str);}, [](const string& str) -> string {return mints::reversed(str);})) {}
 
     ~Listener() {
         if (doc_ptr != nullptr) {
@@ -1618,6 +1253,9 @@ public:
                         }
 
                         doc_ptr->remove_holder(idx_to_delete); break;
+
+                    default:
+                        break;
                 }
             } catch (ERRORS errors) {
                 switch (errors.error_info) {
@@ -1880,7 +1518,7 @@ private:
         double data;
         string input_str;
 
-        while (1) {
+        while (true) {
 
             p->print();
 
@@ -2019,7 +1657,7 @@ int main() {
     }
 
     while (getline(triefile, str)) {
-        string lower_str = mint_utils::make_lowercase(str);
+        string lower_str = mints::make_lowercase(str);
         scanned_trie_data.push_back(lower_str);
     }
 

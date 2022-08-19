@@ -67,6 +67,12 @@ build CMakeFiles/oopfinal.dir/holders.cpp.o: CXX_COMPILER__oopfinal_Debug /Users
   OBJECT_DIR = CMakeFiles/oopfinal.dir
   OBJECT_FILE_DIR = CMakeFiles/oopfinal.dir
 
+build CMakeFiles/oopfinal.dir/trie.cpp.o: CXX_COMPILER__oopfinal_Debug /Users/hyegeun_song/CLionProjects/oopfinal/trie.cpp || cmake_object_order_depends_target_oopfinal
+  DEP_FILE = CMakeFiles/oopfinal.dir/trie.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.4 -std=gnu++20
+  OBJECT_DIR = CMakeFiles/oopfinal.dir
+  OBJECT_FILE_DIR = CMakeFiles/oopfinal.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target oopfinal
@@ -75,7 +81,7 @@ build CMakeFiles/oopfinal.dir/holders.cpp.o: CXX_COMPILER__oopfinal_Debug /Users
 #############################################
 # Link the executable oopfinal
 
-build oopfinal: CXX_EXECUTABLE_LINKER__oopfinal_Debug CMakeFiles/oopfinal.dir/main.cpp.o CMakeFiles/oopfinal.dir/mint_utils.cpp.o CMakeFiles/oopfinal.dir/holders.cpp.o
+build oopfinal: CXX_EXECUTABLE_LINKER__oopfinal_Debug CMakeFiles/oopfinal.dir/main.cpp.o CMakeFiles/oopfinal.dir/mint_utils.cpp.o CMakeFiles/oopfinal.dir/holders.cpp.o CMakeFiles/oopfinal.dir/trie.cpp.o
   FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.4
   OBJECT_DIR = CMakeFiles/oopfinal.dir
   POST_BUILD = :

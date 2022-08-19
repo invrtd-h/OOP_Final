@@ -5,13 +5,24 @@
 #include <vector>
 #include <algorithm>
 
-namespace mint_utils {
+namespace mints {
 
-    std::string                 make_lowercase(std::string str);
-    std::vector<std::string>    split(const std::string& str);
-    std::string                 reversed(std::string str);
-    std::string                 identity(std::string str);
+    std::string                         make_lowercase(std::string str);
+    std::vector<std::string>            split(const std::string& str);
+    std::string                         reversed(std::string str);
+    std::string                         identity(std::string str);
 
+    struct double_alloc : std::exception {
+        std::string                     err_msg;
+        explicit                        double_alloc(std::string s);
+        [[nodiscard]] const char*       what() const noexcept override;
+    };
+
+    struct double_free : std::exception {
+        std::string                     err_msg;
+        explicit                        double_free(std::string s);
+        [[nodiscard]] const char*       what() const noexcept override;
+    };
 
 
 
