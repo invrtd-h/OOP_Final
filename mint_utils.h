@@ -28,10 +28,14 @@ namespace mints {
     struct input_out_of_range : named_exception {
         explicit input_out_of_range(std::string s) : named_exception(std::move(s)) {}
     };
-
     struct too_large_argument : named_exception {
         explicit too_large_argument(std::string s) : named_exception(std::move(s)) {}
     };
+    struct unpoppable : named_exception {
+        explicit unpoppable(std::string s) : named_exception(std::move(s)) {}
+    };
+
+
 
     // TODO : move this function to Trie class
     unsigned int closeness(const std::string& s1, const std::string& s2,
