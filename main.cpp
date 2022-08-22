@@ -743,32 +743,24 @@ public:
 
 private:
 
-    void print_manual() const {
-        cout << "Put 1 to print all CONTENTS in the document." << endl;
-        cout << "Put 2 to print all TYPES and TITLES of holders in the document." << endl;
-
-        cout << endl;
-
-        cout << "Put 10 to print an individual holder." << endl;
-        cout << "Put 11 to access and modify an individual holder." << endl;
-
-        cout << endl;
-
-        cout << "Put 20 to make a new holder at the END of the document." << endl;
-        cout << "Put 21 to add a new holder BETWEEN holders and holders." << endl;
-        cout << "Put 22 to pop a holder at the END of the document." << endl;
-        cout << "Put 23 to delete a holder in any place." << endl;
-
-        cout << endl;
-
-        cout << "Put -1 to exit the program." << endl << endl;
+    static void print_manual() {
+        std::cout << mint_manuals::print_manual;
+    }
+    static void print_str_manual() {
+        std::cout << mint_manuals::str_manual;
+    }
+    static void print_tab_manual() {
+        std::cout << mint_manuals::tab_manual;
+    }
+    static void print_cha_manual() {
+        std::cout << mint_manuals::cha_manual;
     }
 
     // Access functions
     void access(int n) {
         if (n >= doc_ptr->size()) {
             // Wrong access; Do nothing
-            throw ERRORS(OUT_OF_RANGE_ERROR, "at Listener::access");
+            throw mints::input_out_of_range("at Listener::access");
         }
 
         Holder* p = doc_ptr->at(n);
@@ -885,25 +877,6 @@ private:
         }
     }
 
-    static void print_str_manual() {
-        cout << "Put 1 to print all CONTENTS of the holder." << endl;
-        cout << "Put 3 to change the title of holder." << endl;
-
-        cout << endl;
-
-        cout << "Put 10 to push your text at the back of the string." << endl;
-        cout << "Put 11 to insert your text between the data." << endl;
-        cout << "Put 20 to delete some elements between strings." << endl;
-        cout << "Put 21 to replace some elements between string into other." << endl;
-        cout << "Put 50 to print title." << endl;
-        cout << "Put 51 to hide title." << endl;
-
-        cout << endl;
-
-        cout << "Put 99 to operate the spell-check function." << endl;
-        cout << "Put -1 to break." << endl;
-    }
-
     void modify_tab(TableHolder* p) {
         cout << "Accessed to the TableHolder named " << p->get_title() << endl;
         cout << "To see the manual, input 0.\n\n";
@@ -957,21 +930,6 @@ private:
                     break;
             }
         }
-    }
-
-    static void print_tab_manual() {
-        cout << "Put 1 to print all CONTENTS of the holder." << endl;
-        cout << "Put 3 to change the title of holder." << endl;
-
-        cout << endl;
-
-        cout << "Put 10 to change an element in the table." << endl;
-        cout << "Put 50 to print title." << endl;
-        cout << "Put 51 to hide title." << endl;
-
-        cout << endl;
-
-        cout << "Put -1 to break." << endl;
     }
 
     void modify_cha(ChartHolder* p) {
@@ -1070,25 +1028,6 @@ private:
                     break;
             }
         }
-    }
-
-    static void print_cha_manual() {
-        cout << "Put 1 to print all CONTENTS of the holder." << endl;
-        cout << "Put 3 to change the title of holder." << endl;
-
-        cout << endl;
-
-        cout << "Put 10 to push a data." << endl;
-        cout << "Put 11 to pop a data." << endl;
-        cout << "Put 20 to modify the vertical size of the graph." << endl;
-        cout << "Put 21 to modify the data name." << endl;
-        cout << "Put 22 to modify the height." << endl;
-        cout << "Put 50 to print title." << endl;
-        cout << "Put 51 to hide title." << endl;
-
-        cout << endl;
-
-        cout << "Put -1 to break." << endl;
     }
 
     void save() {
