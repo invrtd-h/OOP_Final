@@ -1,3 +1,1 @@
 tester.txt
-
-<STRINGHOLDER><TABLE><LINE><HISTOGRAM>

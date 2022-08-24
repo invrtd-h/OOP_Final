@@ -58,7 +58,7 @@ namespace mints {
 }
 
 namespace mint_manuals {
-    const std::string print_manual = "Put 1 to print all CONTENTS in the document.\n"
+    const std::string general_manual{"Put 1 to print all CONTENTS in the document.\n"
                                      "Put 2 to print all TYPES and TITLES of holders in the document.\n"
                                      "\n"
                                      "Put 10 to print an individual holder.\n"
@@ -69,7 +69,7 @@ namespace mint_manuals {
                                      "Put 22 to pop a holder at the END of the document.\n"
                                      "Put 23 to delete a holder in any place.\n"
                                      "\n"
-                                     "Put -1 to exit the program.\n\n";
+                                     "Put -1 to exit the program.\n\n"};
 
     const std::string str_manual = "Put 1 to print all CONTENTS of the holder.\n"
                                    "Put 3 to change the title of holder.\n"
