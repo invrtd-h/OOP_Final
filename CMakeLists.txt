@@ -3,4 +3,4 @@ project(oopfinal)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(oopfinal main.cpp mint_utils.h mint_utils.cpp holders.h holders.cpp trie.cpp trie.h docus.h listener.h)
+add_executable(oopfinal main.cpp mint_utils.h mint_utils.cpp holders.h holders.cpp trie.cpp trie.h docus.h listener.h docus.cpp listener.cpp)

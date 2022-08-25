@@ -13,18 +13,18 @@ class Node {
 protected:
     char ch;
     int level, offspring_num;
-    Node* next[26];
+    std::array<Node*, 26> next{};
     std::string* to_data;
 
 public:
     Node(char _c, int _level) : ch(_c), level(_level), to_data(nullptr), offspring_num(0) {
-        for (auto& i : next) {
-            i = nullptr;
+        for (int i = 0; i < 26; ++i) {
+            next[i] = nullptr;
         }
     }
     virtual ~Node() {
         // cout << ch << " Node with offspring " << offspring_num << " deleted" << endl;
-        for (auto& i : next) {
+        for (auto i : next) {
             if (i != nullptr) {
                 delete i;
             }

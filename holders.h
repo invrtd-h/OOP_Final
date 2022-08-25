@@ -243,139 +243,25 @@ public:
     [[nodiscard]] std::string to_txt_data() const override;
 
 private:
-    [[nodiscard]] std::vector<std::pair<std::string, int>> data_split() const {
-        std::vector<std::pair<std::string, int>> vecpair;
-        vecpair.emplace_back("", 0);
-
-        for (int i = 0; i < data.size(); ++i) {
-            if (65 <= data[i] && data[i] <= 90) {
-                vecpair.back().first += data[i] + 32;
-            } else if (97 <= data[i] && data[i] <= 122) {
-                vecpair.back().first += data[i];
-            } else if (!vecpair.back().first.empty()) {
-                vecpair.emplace_back("", i + 1);
-            } else {
-                ++vecpair.back().second;
-            }
-        }
-
-        while (vecpair.back().first.empty()) {
-            vecpair.pop_back();
-        }
-
-        return vecpair;
-    }
+    [[nodiscard]] std::vector<std::pair<std::string, int>> data_split() const;
 
 public:
     // Edit methods
 
     // remove : If data = "abcdefg", and we apply remove(3, 2), then we get edited data = "abcfg"
-    void remove(unsigned int start, unsigned int length) {
-        if (data.size() <= start) {
-            return;
-        }
-        if (start + length >= data.size()) {
-            data = data.substr(0, start);
-        } else {
-            data = data.substr(0, start) + data.substr(start + length);
-        }
-    }
+    void remove(unsigned int start, unsigned int length);
 
     // edit : If data = "abcdefg", and we apply edit(3, "str"), then we get editted data = "abcstrg"
-    void edit(unsigned int start, const std::string& str) {
-        int idx = (int) str.size() < start ? (int) str.size() : start;
-        if (idx + str.size() >= data.size()) {
-            data = data.substr(0, idx) + str;
-        } else {
-            data = data.substr(0, idx) + str + data.substr(idx + str.size());
-        }
-    }
+    void edit(unsigned int start, const std::string& str);
 
     // insert : If data = "abcdefg", and we apply insert(3, "str"), then we get editted data = "abcstrdefg"
-    void insert(unsigned int start, const std::string& str) {
-        int idx = (int) data.size() < start ? (int) data.size() : start;
-        data = data.substr(0, idx) + str + data.substr(idx);
-    }
+    void insert(unsigned int start, const std::string& str);
 
     // push : If data = "abc", and we apply push("defg"), then we get editted data = "abcdefg"
-    void push(const std::string& str) {
-        data += str;
-    }
+    void push(const std::string& str);
 
     // Spell-check method 2 : Improved spell-check with 2 tries
-    void spellcheck(const Trie& trie1, const Trie& trie2, const int MAX_SUGGESTIONS = 1000) {
-        std::vector<std::pair<std::string, int>> vecpair = data_split();
-
-        // If the length of data is modified by our spell-check operation, then our mlsf variable will revise it
-        int modified_length_so_far = 0;
-        int& mlsf = modified_length_so_far; // This reference is just an abbreviation
-
-        unsigned int idx = -1;
-
-        for (const auto& pairpair : vecpair) {
-            std::string str = mints::make_lowercase(pairpair.first);
-            if (trie1._contains_(str)) {
-                // If our letter is in out trie, i.e. right spell, then just pass
-                continue;
-            }
-            // Get our suggests list in our Trie
-            std::vector<std::string> suggests = trie1.get_suggestions(str, MAX_SUGGESTIONS * 20);
-            std::vector<std::string> hold = trie2.get_suggestions(str, MAX_SUGGESTIONS * 20);
-            suggests.insert(suggests.end(), hold.begin(), hold.end());
-
-            // Sort in increasing order of closeness
-            // Since sorting the strings directly causes a lot of memory allocations, we rather sort the pointer of strings, not strings
-            std::string* ptrs[suggests.size()];
-            for (int i = 0; i < suggests.size(); ++i) {
-                ptrs[i] = &suggests[i];
-            }
-
-            const std::function<std::string(const std::string&)> read_dir_1 = trie1.get_preprocess();
-            const std::function<std::string(const std::string&)> read_dir_2 = trie2.get_preprocess();
-
-            // The lambda function in the 3rd component of 'sort' is a function that reads two string pointers (lhs, rhs) and return whether *lhs is closer to 'str' than *rhs.
-            std::sort(ptrs, ptrs + suggests.size(),
-                 [str, &read_dir_1, &read_dir_2](std::string* lhs, std::string* rhs) -> bool {
-                return mints::closeness(*lhs, str, read_dir_1) + mints::closeness(*lhs, str, read_dir_2) > mints::closeness(*rhs, str, read_dir_1) + mints::closeness(*rhs, str, read_dir_2);
-            });
-
-            // If MAX_SUGGESTIONS = 20 and suggests.size() = 15, then we suggest 15 words
-            // If MAX_SUGGESTIONS = 20 and suggests.size() = 40, then we suggest 20 words
-            const int final_recommending_number = suggests.size() < MAX_SUGGESTIONS ? (int) suggests.size() : MAX_SUGGESTIONS;
-
-            // Print our alternative words
-            std::cout << "The alternative words for word '" << str << "' are: " << std::endl;
-            for (int i = 0; i < final_recommending_number; ++i) {
-                std::cout << i + 1 << " " << *ptrs[i] << " | ";
-            } std::cout << std::endl;
-
-            // Asks users that do you want to correct it
-            do {
-                std::cout << "Put a number if you want to correct (Put 0 if you don't want) : ";
-                std::cin >> idx;
-                std::cin.ignore(1000, '\n');
-            } while (idx > final_recommending_number);
-            --idx;
-
-            if (idx == -1) {
-                continue;
-            } else {
-                remove(pairpair.second + mlsf, (unsigned int) pairpair.first.size());
-                insert(pairpair.second + mlsf, *ptrs[idx]);
-
-                // mlsf -= size to delete; mlsf += size to put;
-                mlsf -= (unsigned int) pairpair.first.size() - ptrs[idx]->size();
-
-                print();
-            }
-
-            std::cout << std::endl;
-
-        }
-
-        std::cout << "END OF SPELL-CHECK" << std::endl << std::endl;
-
-    }
+    void spellcheck(const Trie& trie1, const Trie& trie2, const int MAX_SUGGESTIONS = 1000);
 
 };
 

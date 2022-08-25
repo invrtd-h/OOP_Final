@@ -48,7 +48,10 @@ int main() {
     }
 
     Listener listener(scanned_data, scanned_trie_data);
-    listener.listen();
+    auto save_data = listener.listen();
+
+    std::ofstream ofile("tester.txt");
+    ofile << save_data;
 
     std::cout << "The program is successfully closed." << std::endl;
 }
