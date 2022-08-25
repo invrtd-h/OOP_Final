@@ -29,12 +29,22 @@ int Holder::StaticList<T>::size() const noexcept {
  * Holder::implements
  */
 
-Holder::Holder(std::string t) : title(std::move(t)), show_title(false) {}
+/**
+ * Holder 생성자
+ * @param _title 제목
+ */
+Holder::Holder(std::string _title) : title(std::move(_title)), show_title(false) {}
 
-std::string Holder::get_title() const {
+/**
+ * @return 제목
+ */
+const std::string& Holder::get_title() const {
     return title;
 }
 
+/**
+ * @param str 새로운 제목
+ */
 void Holder::set_title(const std::string &str) {
     title = str;
 }
@@ -98,6 +108,10 @@ std::string ShapeHolder::to_txt_data() const {
  * ShapeHolder::implements end
  */
 
+/**
+ * 기존 데이터에서 읽어온 정보를 기반으로 한 TableHolder 생성자
+ * @param data 파싱된 데이터
+ */
 TableHolder::TableHolder(const std::vector<std::string> &data) :
         Holder(data[0]), i_num(stoi(data[1])), j_num(stoi(data[2])) {
     show_title = false;
@@ -111,6 +125,11 @@ TableHolder::TableHolder(const std::vector<std::string> &data) :
     }
 }
 
+/**
+ * 새로운 TableHolder의 생성자
+ * @param _i 행 개수
+ * @param _j 열 개수
+ */
 TableHolder::TableHolder(unsigned int _i, unsigned int _j) : Holder(), i_num(_i), j_num(_j) {
     show_title = false;
 
@@ -145,6 +164,12 @@ std::string TableHolder::to_txt_data() const {
     return ret;
 }
 
+/**
+ * 문자열 삽입
+ * @param str i행 j열에 삽입할 문자열
+ * @param _i 행 번호
+ * @param _j 열 번호
+ */
 void TableHolder::put(const std::string &str, unsigned int _i, unsigned int _j) {
     if (_i >= i_num || _j >= j_num) {
         throw mints::input_out_of_range("Forbidden access request, at TableHolder::put");
@@ -185,6 +210,11 @@ void TableHolder::print() const {
     std::cout << std::endl;
 }
 
+/**
+ * @example {"abc", "de", "fghij"} -> 5
+ * @param j_idx 열 번호
+ * @return 해당 열에서 가장 긴 원소의 길이
+ */
 unsigned int TableHolder::maximum_len_thru_column(int j_idx) const {
     unsigned int max = 0;
     for (int i = 0; i < i_num; ++i) {
@@ -196,11 +226,14 @@ unsigned int TableHolder::maximum_len_thru_column(int j_idx) const {
     return max;
 }
 
+/**
+ * 주어진 사이즈에 맞춰 문자열을 출력하는 함수
+ * @example ("abcde", 8) -> // print "abcde   "
+ * @param str 프린트할 문자열
+ * @param block_size 프린트할 블록 사이즈
+ */
 void TableHolder::print_block(const std::string &str, unsigned int block_size) {
-    std::string empty_space;
-    for (int i = 0; i < block_size - str.size(); ++i) {
-        empty_space.push_back(' ');
-    }
+    std::string empty_space(block_size - str.size(), ' ');
     std::cout << str << empty_space;
 }
 
@@ -209,7 +242,9 @@ void TableHolder::print_block(const std::string &str, unsigned int block_size) {
  */
 
 ChartHolder::ChartHolder(const std::vector<std::string> &data)
-        : Holder(data[0]), x_label_number(stoi(data[1])), i_pxl(stoi(data[2])) {
+        : Holder(data[0])
+        , x_label_number(stoi(data[1]))
+        , i_pxl(stoi(data[2])) {
     show_title = true;
 
     for (int i = 0, j = 3; i < x_label_number; ++i) {
@@ -488,4 +523,51 @@ void LineHolder::put_line(Holder::Layer &frame) const {
         auto j2 = 2 + (p + 1) * (max_len + 1) + max_len / 2;
         put_segment(frame, i1, j1, i2, j2);
     }
+}
+
+/*
+ * LineHolder::implementations end
+ */
+
+StringHolder::StringHolder(const std::vector<std::string> &_data) : Holder(_data[0]) {
+    show_title = false;
+
+    std::string hold;
+    for (int i = 1; i < _data.size(); ++i) {
+        const std::string& str = _data[i];
+        hold += str;
+        hold += '\n';
+    }
+    data = hold;
+}
+
+StringHolder::StringHolder() : Holder() {
+    show_title = false;
+}
+
+void StringHolder::print() const {
+    if (show_title) {
+        std::cout << title << std::endl;
+    }
+    if (data.empty()) {
+        std::cout << "(EMPTY HOLDER)" << std::endl;
+    } else {
+        std::cout << data << std::endl;
+    }
+}
+
+Holder::TYPE StringHolder::get_type() const {
+    return STRING_HOLDER;
+}
+
+int StringHolder::get_size() const {
+    return (int) data.size();
+}
+
+std::string StringHolder::to_txt_data() const {
+    std::stringstream ss;
+    ss << "<STRINGHOLDER>\n" << title << '\n' << data << '\n' << "</STRINGHOLDER>\n";
+
+    std::string ret; ss >> ret;
+    return ret;
 }

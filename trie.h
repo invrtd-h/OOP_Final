@@ -148,15 +148,15 @@ class Trie : Node {
      We did this due to obey the Data-hiding rule. We want to apply these methods only at the root node of "Trie".
      If not, we will get a garbage value.
      */
-    std::function<std::string(const std::string&)> preprocess, backprocess;
+    std::function<std::string(std::string)> preprocess, backprocess;
 public:
-    explicit Trie(std::function<std::string(const std::string&)> f = [](const std::string& s) {return s;},
-         std::function<std::string(const std::string&)> g = [](const std::string& s) {return s;})
+    explicit Trie(std::function<std::string(std::string)> f,
+         std::function<std::string(std::string)> g)
             : Node(35, 0), preprocess(std::move(f)), backprocess(std::move(g)) {}
             // Character number 35 means "#"; Initializes the top node
     explicit Trie(const std::vector<std::string>& vs,
-         std::function<std::string(const std::string&)> f = [](const std::string& s) {return s;},
-         std::function<std::string(const std::string&)> g = [](const std::string& s) {return s;})
+         std::function<std::string(std::string)> f,
+         std::function<std::string(std::string)> g)
             : Node(35, 0), preprocess(std::move(f)), backprocess(std::move(g)) {
         for (const auto& str : vs) {
             push(str);

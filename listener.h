@@ -12,8 +12,8 @@ public:
     Listener(const std::vector<std::string>& sd, const std::vector<std::string>& strd)
     : how_many_words_do_you_want(10),
         doc_ptr(new Document(sd)),
-        trie_ptr1(new Trie(strd)),
-        trie_ptr2(new Trie(strd, mints::reversed, mints::reversed)) {}
+        trie_ptr1(new Trie(strd, mints::identity_str, mints::identity_str)),
+        trie_ptr2(new Trie(strd, mints::reversed_str, mints::reversed_str)) {}
 
     ~Listener() {
         if (doc_ptr != nullptr) {

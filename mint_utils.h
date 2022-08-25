@@ -3,15 +3,20 @@
 
 #include <string>
 #include <vector>
+#include <concepts>
 #include <algorithm>
 
 namespace mints {
 
     std::string                         make_lowercase(std::string str);
     std::vector<std::string>            split(const std::string& str);
-    std::string                         reversed(std::string str);
-    std::string                         identity(std::string str);
 
+    std::string identity_str(std::string str);
+    std::string reversed_str(std::string str);
+
+    /**
+     * 예외 사유를 지정하는 예외 객체 : std::exception 상속 중
+     */
     struct named_exception : std::exception {
         std::string                     err_msg;
         explicit                        named_exception(const std::string& s);
@@ -42,7 +47,7 @@ namespace mints {
 
     // TODO : move this function to Trie class
     unsigned int closeness(const std::string& s1, const std::string& s2,
-                           const auto& init = identity) {
+                           const auto& init = identity_str) {
         std::string str1 = init(s1);
         std::string str2 = init(s2);
 
@@ -58,6 +63,7 @@ namespace mints {
 
         return size;
     }
+
 }
 
 /**

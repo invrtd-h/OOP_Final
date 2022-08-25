@@ -23,7 +23,7 @@ protected:
     public:
 
         explicit            StaticList(size_t _size) : v(_size) {}
-                            StaticList(size_t n, const T& t) : v(n, t) {}
+                            StaticList(size_t n, const T& _value) : v(n, _value) {}
 
         T&                  operator[](int idx);
         T&                  operator[](unsigned int idx);
@@ -43,14 +43,14 @@ protected:
     bool                                show_title;
 
 public:
-    explicit                            Holder(std::string t = "null_title");
+    explicit                            Holder(std::string _title = "null_title");
     virtual                             ~Holder() = default;
 
     virtual void                        print() const       = 0;
     [[nodiscard]] virtual TYPE          get_type() const    = 0;
     [[nodiscard]] virtual std::string   to_txt_data() const = 0;
 
-    [[nodiscard]] std::string           get_title() const;
+    [[nodiscard]] const std::string&    get_title() const;
     void                                set_title(const std::string& str);
 
     void                                title_on();
@@ -229,49 +229,18 @@ private:
 class StringHolder : public Holder {
     std::string data;
 public:
-    explicit StringHolder(const std::vector<std::string>& _data) : Holder(_data[0]) {
-        show_title = false;
-
-        std::string hold;
-        for (int i = 1; i < _data.size(); ++i) {
-            const std::string& str = _data[i];
-            hold += str;
-            hold += '\n';
-        }
-        data = hold;
-    }
-    StringHolder() : Holder() {
-        show_title = false;
-    }
+    explicit StringHolder(const std::vector<std::string>& _data);
+    StringHolder();
 
     // Print method
-    void print() const override {
-        if (show_title) {
-            std::cout << title << std::endl;
-        }
-        if (data.empty()) {
-            std::cout << "(EMPTY HOLDER)" << std::endl;
-        } else {
-            std::cout << data << std::endl;
-        }
-    }
+    void print() const override;
 
     // Get methods
-    [[nodiscard]] TYPE get_type() const override {
-        return STRING_HOLDER;
-    }
-    [[nodiscard]] int get_size() const {
-        return (int) data.size();
-    }
+    [[nodiscard]] TYPE get_type() const override;
+    [[nodiscard]] int get_size() const;
 
     // Save method
-    [[nodiscard]] std::string to_txt_data() const override {
-        std::stringstream ss;
-        ss << "<STRINGHOLDER>\n" << title << '\n' << data << '\n' << "</STRINGHOLDER>\n";
-
-        std::string ret; ss >> ret;
-        return ret;
-    }
+    [[nodiscard]] std::string to_txt_data() const override;
 
 private:
     [[nodiscard]] std::vector<std::pair<std::string, int>> data_split() const {
@@ -300,7 +269,7 @@ private:
 public:
     // Edit methods
 
-    // remove : If data = "abcdefg", and we apply remove(3, 2), then we get editted data = "abcfg"
+    // remove : If data = "abcdefg", and we apply remove(3, 2), then we get edited data = "abcfg"
     void remove(unsigned int start, unsigned int length) {
         if (data.size() <= start) {
             return;
