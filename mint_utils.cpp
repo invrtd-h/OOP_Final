@@ -1,5 +1,10 @@
 #include "mint_utils.h"
 
+/**
+ * 임의의 문자열을 입력으로 받아, 문자열의 모든 대문자를 소문자로 바꾸는 함수
+ * @param str 임의의 문자열
+ * @return 모든 대문자가 소문자로 바뀐 문자열
+ */
 std::string mints::make_lowercase(std::string str) {
     for (char &i: str) {
         if (65 <= i && i <= 90) {

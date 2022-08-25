@@ -11,14 +11,17 @@
 
 class Holder {
 protected:
+
+    /**
+     * size가 객체 생성 시에 정해지는 컨테이너
+     * std::vector<T> 기반으로 구현됩니다.
+     * @tparam T container 내부 원소의 타입
+     */
     template<typename T>
     class StaticList {
         std::vector<T>      v;
     public:
-        /**
-         *
-         * @param _size
-         */
+
         explicit            StaticList(size_t _size) : v(_size) {}
                             StaticList(size_t n, const T& t) : v(n, t) {}
 

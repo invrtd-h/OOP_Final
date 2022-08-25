@@ -13,7 +13,7 @@ public:
     : how_many_words_do_you_want(10),
         doc_ptr(new Document(sd)),
         trie_ptr1(new Trie(strd)),
-        trie_ptr2(new Trie(strd, [](const std::string& str) -> std::string {return mints::reversed(str);}, [](const std::string& str) -> std::string {return mints::reversed(str);})) {}
+        trie_ptr2(new Trie(strd, mints::reversed, mints::reversed)) {}
 
     ~Listener() {
         if (doc_ptr != nullptr) {

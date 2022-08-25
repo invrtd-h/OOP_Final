@@ -34,6 +34,9 @@ namespace mints {
     struct unpoppable : named_exception {
         explicit unpoppable(std::string s) : named_exception(std::move(s)) {}
     };
+    struct unable_to_open_file : named_exception {
+        explicit unable_to_open_file(std::string s) : named_exception(std::move(s)) {}
+    };
 
 
 
@@ -57,6 +60,9 @@ namespace mints {
     }
 }
 
+/**
+ * 프로그램 내에서 출력될 default manuals를 저장하는 네임스페이스
+ */
 namespace mint_manuals {
     const std::string general_manual{"Put 1 to print all CONTENTS in the document.\n"
                                      "Put 2 to print all TYPES and TITLES of holders in the document.\n"
