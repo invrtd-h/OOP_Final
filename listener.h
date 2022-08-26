@@ -4,15 +4,14 @@
 #include "docus.h"
 
 class Listener {
-    Document* doc_ptr;
-    Trie* trie_ptr1;
-    Trie* trie_ptr2;
-    int how_many_words_do_you_want;
+    Document*   doc_ptr;
+    Trie*       trie_ptr1;
+    Trie*       trie_ptr2;
+    int         how_many_words_do_you_want;
 
 public:
 
     Listener(const std::vector<std::string>& sd, const std::vector<std::string>& strd);
-
     ~Listener();
 
     std::string listen();
@@ -33,9 +32,9 @@ private:
     }
 
     // Access functions
-    void access(int n);
+    void        access(int n);
 
-    void modify_str(StringHolder* p);
+    void        modify_str(StringHolder* p);
     static void modify_tab(TableHolder* p);
     static void modify_cha(ChartHolder* p);
 

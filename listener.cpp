@@ -181,17 +181,17 @@ void Listener::access(int n) {
 
     // Check the type of holder and call prefer access functions.
     if (p->get_type() == Holder::STRING_HOLDER) {
-        StringHolder* q = dynamic_cast<StringHolder*>(p);
+        auto* q = dynamic_cast<StringHolder*>(p);
         modify_str(q);
         return;
     }
     if (p->get_type() == Holder::TABLE_HOLDER) {
-        TableHolder* q = dynamic_cast<TableHolder*>(p);
+        auto* q = dynamic_cast<TableHolder*>(p);
         modify_tab(q);
         return;
     }
     if (p->get_type() == Holder::LINE_HOLDER || p->get_type() == Holder::HISTOGRAM_HOLDER) {
-        LineHolder* q = dynamic_cast<LineHolder*>(p);
+        auto* q = dynamic_cast<LineHolder*>(p);
         modify_cha(q);
         return;
     }
