@@ -261,7 +261,7 @@ public:
     void push(const std::string& str);
 
     // Spell-check method 2 : Improved spell-check with 2 tries
-    void spellcheck(const Trie& trie1, const Trie& trie2, const int MAX_SUGGESTIONS = 1000);
+    void spellcheck(const Trie& trie1, const Trie& trie2, int MAX_SUGGESTIONS = 1000);
 
 };
 

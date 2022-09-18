@@ -70,6 +70,8 @@ namespace mints {
  * 프로그램 내에서 출력될 default manuals를 저장하는 네임스페이스
  */
 namespace mint_manuals {
+    using namespace std::string_literals;
+
     const std::string general_manual{"Put 1 to print all CONTENTS in the document.\n"
                                      "Put 2 to print all TYPES and TITLES of holders in the document.\n"
                                      "\n"
@@ -81,7 +83,7 @@ namespace mint_manuals {
                                      "Put 22 to pop a holder at the END of the document.\n"
                                      "Put 23 to delete a holder in any place.\n"
                                      "\n"
-                                     "Put -1 to exit the program.\n\n"};
+                                     "Put -1 to exit the program.\n\n"s};
 
     const std::string str_manual = "Put 1 to print all CONTENTS of the holder.\n"
                                    "Put 3 to change the title of holder.\n"
@@ -94,7 +96,7 @@ namespace mint_manuals {
                                    "Put 51 to hide title.\n"
                                    "\n"
                                    "Put 99 to operate the spell-check function.\n"
-                                   "Put -1 to break.\n\n";
+                                   "Put -1 to break.\n\n"s;
 
     const std::string tab_manual = "Put 1 to print all CONTENTS of the holder.\n"
                                    "Put 3 to change the title of holder.\n"
@@ -103,7 +105,7 @@ namespace mint_manuals {
                                    "Put 50 to print title.\n"
                                    "Put 51 to hide title.\n"
                                    "\n"
-                                   "Put -1 to break.\n\n";
+                                   "Put -1 to break.\n\n"s;
 
     const std::string cha_manual = "Put 1 to print all CONTENTS of the holder.\n"
                                    "Put 3 to change the title of holder.\n"
@@ -116,7 +118,7 @@ namespace mint_manuals {
                                    "Put 50 to print title.\n"
                                    "Put 51 to hide title.\n"
                                    "\n"
-                                   "Put -1 to break.\n\n";
+                                   "Put -1 to break.\n\n"s;
 }
 
 #endif //OOPFINAL_MINT_UTILS_H
